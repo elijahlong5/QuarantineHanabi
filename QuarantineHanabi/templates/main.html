@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+    <div>
+        <h1>Welcome to Hanabi online!</h1>
+        <h2>Please create a lobby or join one with the login code!</h2>
+    </div>
+    <div class="choices">
+        <form action="/create-lobby/" method="post">
+            <button class="button" type="submit">
+                Create Lobby
+            </button>
+        </form>
+        <form action="/join-lobby/" method="post">
+            <h4>Name</h4>
+            <input class="shown-input-field" type="text" name="player_name_field" required>
+            <h4>
+                Access code
+            </h4>
+            <input class="shown-input-field" type="text" name="access_code" required>
+            <button class="button" type="submit">
+                Join Lobby
+            </button>
+        </form>
+    </div>
+{% endblock content %}
