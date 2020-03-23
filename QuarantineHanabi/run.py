@@ -12,17 +12,9 @@ def main():
 
 
 @app.route("/lobby/<access_code>/")
-@app.route("/lobby/<access_code>/player-id/<player_id>/")
+@app.route("/lobby/<access_code>/player_id/<player_id>/")
 def lobby(access_code, player_id=None):
     return render_template('lobby.html',
-                           access_code=access_code,
-                           player_id=player_id)
-
-
-@app.route('/game-in-session/<access_code>/player-id/<player_id>/')
-def game_in_session(access_code, player_id):
-    # TODO: also need to pass game instance as json
-    return render_template("game-in-session.html",
                            access_code=access_code,
                            player_id=player_id)
 
@@ -41,21 +33,6 @@ def join_lobby():
     return redirect(url_for("lobby",
                             access_code=access_code,
                             player_id=player_id))
-
-
-@app.route("/start-game/", methods=['post'])
-def start_game():
-    access_code = request.form['access_code']
-    game_instance = hanabi_lobbies[access_code]
-    # TODO: need to start the game
-    return redirect(url_for("game_in_session",
-                            access_code=access_code,
-                            player_id=request.form['player_id']))
-
-
-@app.route("/api/lobbies/<access_code>/game-in-session")
-def is_game_on(access_code):
-    return hanabi_lobbies[access_code].game_in_session
 
 
 if __name__ == "__main__":
