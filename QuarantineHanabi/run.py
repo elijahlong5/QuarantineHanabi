@@ -22,6 +22,16 @@ def main():
     return render_template("main.html")
 
 
+@app.route("/api/game-in-session/<access_code>/<player_id>/")
+def game_in_session_api(access_code, player_id):
+    print(access_code, player_id)
+    if access_code not in hanabi_lobbies:
+        abort(404)
+    game_state = hanabi_lobbies[access_code].get_game_state(player_id)
+    print(game_state)
+    return jsonify(game_state)
+
+
 @app.route("/api/lobby/<access_code>/")
 def lobby_api(access_code):
     if access_code not in hanabi_lobbies:
