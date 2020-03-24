@@ -24,9 +24,10 @@ def test_lobby_api():
         "Jim": jim,
         "John": john,
     }
-    run.hanabi_lobbies[access_token] = {
-        "players": players,
-    }
+    game = HanabiGame()
+    game.players = players
+
+    run.hanabi_lobbies[access_token] = game
 
     expected_data = {
         "players": {

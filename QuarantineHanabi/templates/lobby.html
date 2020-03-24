@@ -18,3 +18,15 @@
     <div id="player-list"></div>
   </section>
 {% endblock content %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='scripts/lobby-players.js') }}"></script>
+  <script>
+      $(document).ready(function() {
+          const urlParts = window.location.pathname.split("/");
+          const accessToken = urlParts[2];
+
+          startPollingPlayerList(accessToken, "#player-list");
+      });
+  </script>
+{% endblock %}
