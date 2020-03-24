@@ -74,7 +74,7 @@ class HanabiGame:
         self.discard_pile = []
         self.bomb_count = 3
         self.piles = []
-        self.whose_turn = 1
+        self.whose_turn = "JAH"
         print("--------starting game-------")
         for p in self.players.values():
             print(p.name)
@@ -88,7 +88,7 @@ class HanabiGame:
             "piles": self.piles,
             "discard-pile": self.discard_pile,
             "bomb-count": self.bomb_count,
-            "whose-turn": self.current_turn_id,
+            "whose-turn": self.whose_turn,
         }
 
         for p in self.players.values():
