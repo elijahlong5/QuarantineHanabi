@@ -1,0 +1,10 @@
+.container {
+  margin: 0 auto;
+  max-width: 50rem;
+}
+
+.call-to-action {
+  margin: 3em 0;
+  text-align: center;
+}
+

@@ -1,25 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
-    <div>
-        <h1>Welcome to Hanabi online!</h1>
-        <h2>Please create a lobby or join one with the login code!</h2>
-    </div>
-    <div class="choices">
-        <form action="/create-lobby/" method="post">
-            <button class="button" type="submit">
-                Create Lobby
-            </button>
-        </form>
-        <form action="/join-lobby/" method="post">
-            <h4>Name</h4>
-            <input class="shown-input-field" type="text" name="player_name_field" required>
-            <h4>
-                Access code
-            </h4>
-            <input class="shown-input-field" type="text" name="access_code" required>
-            <button class="button" type="submit">
-                Join Lobby
-            </button>
-        </form>
-    </div>
+  <div class="container">
+    <section class="call-to-action">
+        <h1>Hanabi Online</h1>
+    </section>
+
+    <section class="text-center mb-5" id="create-lobby">
+      <h2>Create a Lobby</h2>
+      <p class="lead mb-4">
+        Create a new lobby for between one and four other players to join.
+      </p>
+
+      <form action="{{ url_for('create_lobby') }}" method="post">
+        <button class="btn btn-primary text-center" type="submit">
+          Create Lobby
+        </button>
+      </form>
+    </section>
+
+    <section class="mb-5" id="create-lobby">
+      <h2 class="text-center">Join a Lobby</h2>
+      <p class="text-center lead mb-4">
+        Join a lobby that has already been created.
+      </p>
+
+      <form action="{{ url_for('join_lobby') }}" method="post">
+        <div class="row">
+          <div class="col form-group">
+            <label for="join-lobby-name">Name</label>
+            <input class="form-control"
+                   id="join-lobby-name"
+                   name="player_name_field"
+                   required>
+          </div>
+
+          <div class="col form-group">
+            <label for="join-lobby-access-code">Access Code</label>
+            <input class="form-control"
+                   id="join-lobby-access-code"
+                   name="access_code"
+                   required>
+          </div>
+        </div>
+
+        <button class="btn btn-primary d-block ml-auto mr-auto" type="submit">
+          Join Lobby
+        </button>
+      </form>
+    </section>
+  </div>
 {% endblock content %}
