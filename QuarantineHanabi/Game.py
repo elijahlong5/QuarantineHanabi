@@ -24,9 +24,6 @@ class Player:
     def give_card(self, card):
         self.hand.append(card)
 
-    def play_card(self, card):
-        self.hand.pop(card)
-
 
 class Deck:
     def __init__(self):
@@ -101,6 +98,35 @@ class HanabiGame:
                 game_state['players'][p.name] = []
         return game_state
 
+    def handle_move_request(self, move_request):
+        # check if the it is this players' turn
+        if self.whose_turn == move_request['player-id']:
+            # make the move
+            if move_request['move'] == "play":
+                return self.play_card(move_request)
+            elif move_request['move'] == "discard":
+                return self.discard(move_request)
+            elif move_request['move'] == "hint":
+                return self.give_hint(move_request)
+        else:
+            return ValueError
 
+    # Possible moves
+    def less_card_helper(self, player, card):
+        p = player
+        p.hand.pop(card)
+        if self.deck.cards_left > 0:
+            p.give_card(self.deck.draw_card())
+        return card
 
+    def play_card(self, move_request):
+        card = move_request['card']
+        p = self.players[move_request['player-id']]
+        self.less_card_helper(p, card)
+        self.piles.append(card)
 
+    def discard_card(self, move_request):
+        card = move_request['card']
+        p = self.players[move_request['player-id']]
+        self.less_card_helper(p, card)
+        self.discard_pile.append(card)
