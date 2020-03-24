@@ -1,5 +1,8 @@
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, jsonify, redirect, render_template, request, url_for, abort
+
 from Game import HanabiGame
+
+
 app = Flask(__name__)
 
 hanabi_lobbies = {}
@@ -9,6 +12,22 @@ hanabi_lobbies = {}
 @app.route('/home/')
 def main():
     return render_template('main.html')
+
+
+@app.route("/api/lobby/<access_code>/")
+def lobby_api(access_code):
+    if access_code not in hanabi_lobbies:
+        abort(404)
+
+    game = hanabi_lobbies[access_code]
+    players = {}
+    for player in game.players:
+        players[player] = {
+            "name": game.players[player].name,
+            "order": game.players[player].turn_order,
+        }
+
+    return jsonify({"players": players})
 
 
 @app.route("/lobby/<access_code>/")

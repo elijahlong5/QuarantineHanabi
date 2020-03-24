@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-    <div>
-        <h3>
-            You are in a lobby.  Access code is {{ access_code }}
-        </h3>
-        <form action="/start-game/" method="post">
-            <button class="button" type="submit" id="start-game-button">
-                Start Game
-            </button>
-            <input type="hidden" value="{{access_code}}" name="access_code">
-            <input type="hidden" value="{{player_id}}" name="player_id">
-        </form>
-    </div>
+  <div>
+    <h2>
+      You are in a lobby. Access code is {{ access_code }}
+    </h2>
+    <form action="/start-game/" method="post">
+      <button class="button" type="submit" id="start-game-button">
+        Start Game
+      </button>
+      <input type="hidden" value="{{ access_code }}" name="access_code">
+      <input type="hidden" value="{{ player_id }}" name="player_id">
+    </form>
+  </div>
+
+  <section>
+    <h2>Players</h2>
+    <div id="player-list"></div>
+  </section>
 {% endblock content %}
