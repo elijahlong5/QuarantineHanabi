@@ -21,10 +21,11 @@ def lobby(access_code, player_id=None):
 
 @app.route('/game-in-session/<access_code>/player-id/<player_id>/')
 def game_in_session(access_code, player_id):
-    # TODO: also need to pass game instance as json
+    game_state = hanabi_lobbies[access_code].get_game_state(player_id)
     return render_template("game-in-session.html",
                            access_code=access_code,
-                           player_id=player_id)
+                           player_id=player_id,
+                           game_state=game_state)
 
 
 @app.route('/create-lobby/', methods=['post'])
@@ -37,7 +38,11 @@ def create_lobby():
 @app.route("/join-lobby/", methods=['post'])
 def join_lobby():
     access_code = request.form["access_code"]
+    if access_code not in hanabi_lobbies.keys():
+        return redirect(url_for("main"))
     player_id = request.form["player_name_field"]
+    game_instance = hanabi_lobbies[access_code]
+    game_instance.add_player(player_id)
     return redirect(url_for("lobby",
                             access_code=access_code,
                             player_id=player_id))
@@ -47,10 +52,12 @@ def join_lobby():
 def start_game():
     access_code = request.form['access_code']
     game_instance = hanabi_lobbies[access_code]
-    # TODO: need to start the game
+    game_instance.start_game()
+    player_id = request.form['player_id']
     return redirect(url_for("game_in_session",
                             access_code=access_code,
-                            player_id=request.form['player_id']))
+                            player_id=player_id,
+                            game_state=game_instance.get_game_state(player_id)))
 
 
 @app.route("/api/lobbies/<access_code>/game-in-session")
