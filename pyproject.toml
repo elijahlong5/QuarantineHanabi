@@ -1,0 +1,4 @@
+[tool.black]
+# Line length compatible with flake8
+line-length = 79
+target-version = ["py37"]
