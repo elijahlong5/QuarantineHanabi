@@ -92,7 +92,7 @@ class HanabiGame:
         }
 
         for p in self.players.values():
-            if self.players[p].name != player_id:
+            if p.name != player_id:
                 game_state["players"][p.name] = p.hand
             else:
                 game_state["players"][p.name] = []
