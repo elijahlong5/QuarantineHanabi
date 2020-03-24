@@ -32,7 +32,7 @@ class Deck:
         self.shuffle()
 
     def shuffle(self):
-        for i in range(len(self.deck)-1, 0, -1):
+        for i in range(len(self.deck) - 1, 0, -1):
             # Pick a random index from 0 to i
             j = random.randint(0, i + 1)
             # Swap arr[i] with the element at random index
@@ -79,7 +79,7 @@ class HanabiGame:
         for p in self.players.values():
             print(p.name)
             for c in p.hand:
-                print(f'The {c.Color} {c.Rank}.')
+                print(f"The {c.Color} {c.Rank}.")
 
     def get_game_state(self, player_id):
         game_state = {
@@ -93,20 +93,20 @@ class HanabiGame:
 
         for p in self.players.values():
             if self.players[p].name != player_id:
-                game_state['players'][p.name] = p.hand
+                game_state["players"][p.name] = p.hand
             else:
-                game_state['players'][p.name] = []
+                game_state["players"][p.name] = []
         return game_state
 
     def handle_move_request(self, move_request):
         # check if the it is this players' turn
-        if self.whose_turn == move_request['player-id']:
+        if self.whose_turn == move_request["player-id"]:
             # make the move
-            if move_request['move'] == "play":
+            if move_request["move"] == "play":
                 return self.play_card(move_request)
-            elif move_request['move'] == "discard":
+            elif move_request["move"] == "discard":
                 return self.discard(move_request)
-            elif move_request['move'] == "hint":
+            elif move_request["move"] == "hint":
                 return self.give_hint(move_request)
         else:
             return ValueError
@@ -120,13 +120,13 @@ class HanabiGame:
         return card
 
     def play_card(self, move_request):
-        card = move_request['card']
-        p = self.players[move_request['player-id']]
+        card = move_request["card"]
+        p = self.players[move_request["player-id"]]
         self.less_card_helper(p, card)
         self.piles.append(card)
 
     def discard_card(self, move_request):
-        card = move_request['card']
-        p = self.players[move_request['player-id']]
+        card = move_request["card"]
+        p = self.players[move_request["player-id"]]
         self.less_card_helper(p, card)
         self.discard_pile.append(card)

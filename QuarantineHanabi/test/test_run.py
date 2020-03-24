@@ -31,14 +31,8 @@ def test_lobby_api():
 
     expected_data = {
         "players": {
-            "Jim": {
-                "name": jim.name,
-                "order": jim.turn_order,
-            },
-            "John": {
-                "name": john.name,
-                "order": john.turn_order
-            }
+            "Jim": {"name": jim.name, "order": jim.turn_order},
+            "John": {"name": john.name, "order": john.turn_order},
         }
     }
 
