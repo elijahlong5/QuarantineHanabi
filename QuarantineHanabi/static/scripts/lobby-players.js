@@ -1,6 +1,7 @@
 const PLAYER_LIST_UPDATE_INTERVAL_MILLIS = 5000;
 
 function fetchPlayerInfo(accessToken) {
+    let foo = "bar";
     return fetch("/api/lobby/" + accessToken + "/")
         .then(function (response) {
             return response.json();

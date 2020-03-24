@@ -1,25 +1,39 @@
+import os
+
 from flask import (
     Flask,
+    abort,
     jsonify,
     redirect,
     render_template,
     request,
     url_for,
-    abort,
 )
 
+import forms
 from Game import HanabiGame
 
 
 app = Flask(__name__)
+
+secret_key = os.getenv("SECRET_KEY", None)
+if not secret_key and os.getenv("FLASK_ENV", "").lower() == "development":
+    secret_key = "dev"
+
+app.config["SECRET_KEY"] = secret_key
 
 hanabi_lobbies = {}
 
 # Views
 @app.route("/")
 @app.route("/home/")
-def main():
-    return render_template("main.html")
+def main(create_form=None, join_form=None):
+    create_form = create_form or forms.CreateLobbyForm()
+    join_form = join_form or forms.JoinLobbyForm()
+
+    return render_template(
+        "main.html", create_form=create_form, join_form=join_form
+    )
 
 
 @app.route("/api/game-in-session/<access_code>/<player_id>/")
@@ -69,22 +83,37 @@ def game_in_session(access_code, player_id):
 
 @app.route("/create-lobby/", methods=["post"])
 def create_lobby():
+    form = forms.CreateLobbyForm()
+    if not form.validate_on_submit():
+        return main(create_form=form)
+
+    game = HanabiGame()
+    game.add_player(form.name.data)
+
     access_code = "hanab"
-    hanabi_lobbies[access_code] = HanabiGame()
+    hanabi_lobbies[access_code] = game
+
     return redirect(url_for("lobby", access_code=access_code))
 
 
 @app.route("/join-lobby/", methods=["post"])
 def join_lobby():
-    access_code = request.form["access_code"]
-    if access_code not in hanabi_lobbies.keys():
-        return redirect(url_for("main"))
-    player_id = request.form["player_name_field"]
-    game_instance = hanabi_lobbies[access_code]
-    game_instance.add_player(player_id)
-    return redirect(
-        url_for("lobby", access_code=access_code, player_id=player_id)
-    )
+    form = forms.JoinLobbyForm()
+
+    if form.validate(hanabi_lobbies):
+        access_token = form.access_token.data
+        name = form.name.data
+
+        game = hanabi_lobbies[access_token]
+        game.add_player(name)
+
+        return redirect(
+            url_for("lobby", access_code=access_token, player_id=name)
+        )
+
+    # Important to pass the current form instance so we can keep data
+    # and display errors.
+    return main(join_form=form)
 
 
 @app.route("/start-game/", methods=["post"])

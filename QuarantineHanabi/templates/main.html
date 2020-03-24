@@ -12,6 +12,23 @@
       </p>
 
       <form action="{{ url_for('create_lobby') }}" method="post">
+        {{ create_form.csrf_token }}
+
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-6 col-sm-4 form-group">
+            <label for="join-lobby-name">{{ join_form.name.label }}</label>
+            <input class="form-control"
+                   id="join-lobby-name"
+                   name="{{ join_form.name.name }}"
+                   required>
+            {% if join_form.errors.name %}
+              <small id="join-lobby-name-error" class="form-text text-danger">
+                {{ ' '.join(join_form.errors.name) }}
+              </small>
+            {% endif %}
+          </div>
+        </div>
+
         <button class="btn btn-primary text-center" type="submit">
           Create Lobby
         </button>
@@ -25,21 +42,35 @@
       </p>
 
       <form action="{{ url_for('join_lobby') }}" method="post">
+        {{ join_form.csrf_token }}
+
         <div class="row">
           <div class="col form-group">
-            <label for="join-lobby-name">Name</label>
+            <label for="join-lobby-name">{{ join_form.name.label }}</label>
             <input class="form-control"
                    id="join-lobby-name"
-                   name="player_name_field"
+                   name="{{ join_form.name.name }}"
                    required>
+            {% if join_form.errors.name %}
+              <small id="join-lobby-name-error" class="form-text text-danger">
+                {{ ' '.join(join_form.errors.name) }}
+              </small>
+            {% endif %}
           </div>
 
           <div class="col form-group">
-            <label for="join-lobby-access-code">Access Code</label>
+            <label for="join-lobby-access-code">
+              {{ join_form.access_token.label }}
+            </label>
             <input class="form-control"
                    id="join-lobby-access-code"
-                   name="access_code"
+                   name="{{ join_form.access_token.name }}"
                    required>
+            {% if join_form.errors.access_token %}
+              <small id="join-lobby-access-token-error" class="form-text text-danger">
+                {{ ' '.join(join_form.errors.access_token) }}
+              </small>
+            {% endif %}
           </div>
         </div>
 

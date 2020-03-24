@@ -1,5 +1,7 @@
+Flask-WTF==0.14.3
 black==19.10b0
 flake8==3.7.9
 flask==1.1.1
 pre-commit==2.2.0
 pytest==5.4.1
+wtforms==2.2.1
