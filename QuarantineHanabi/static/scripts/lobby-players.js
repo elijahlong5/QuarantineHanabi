@@ -14,7 +14,7 @@ function updatePlayerList(playerListContainer, players) {
     const playerList = $("<ul />");
     for (const player in players) {
         const playerListItem = $("<li />");
-        playerListItem.innerText = player;
+        playerListItem.text(player);
 
         playerList.append(playerListItem);
     }
