@@ -1,6 +1,8 @@
 # The base image for the application containing all required dependencies.
 FROM python:3.7 AS dependencies
 
+ENV PYTHONDONTWRITEBYTECODE=true
+
 WORKDIR /opt/hanabi
 
 # Flask application specified as '[path/to/]module[.submodule][:member]'
