@@ -18,7 +18,6 @@ function initiateDisplay(accessToken, playerId) {
                 // make player div
                 let playerDiv = document.createElement("div");
                 playerDiv.id = key;
-                // playerDiv.innerText = gameState['players'][key];
                 $("#hands").append(playerDiv);
 
                 for (let card in gameState['players'][key]) {
@@ -28,6 +27,9 @@ function initiateDisplay(accessToken, playerId) {
                     let link = "/static/hanabi_deck/"+color+"_"+rank+".png";
                     curImg.src = link;
                     playerDiv.appendChild(curImg);
+                    curImg.addEventListener("click", function() {
+                        console.log("the "+color+" "+rank+" was clicked");
+                    });
                 }
             }
         });
