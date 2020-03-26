@@ -16,14 +16,14 @@
 
         <div class="row justify-content-center">
           <div class="col-12 col-md-6 col-sm-4 form-group">
-            <label for="join-lobby-name">{{ join_form.name.label }}</label>
+            <label for="create-lobby-name">{{ create_form.name.label }}</label>
             <input class="form-control"
-                   id="join-lobby-name"
+                   id="create-lobby-name"
                    name="{{ join_form.name.name }}"
                    required>
-            {% if join_form.errors.name %}
-              <small id="join-lobby-name-error" class="form-text text-danger">
-                {{ ' '.join(join_form.errors.name) }}
+            {% if create_form.errors.name %}
+              <small id="create-lobby-name-error" class="form-text text-danger">
+                {{ ' '.join(create_form.errors.name) }}
               </small>
             {% endif %}
           </div>
@@ -35,7 +35,7 @@
       </form>
     </section>
 
-    <section class="mb-5" id="create-lobby">
+    <section class="mb-5" id="join-lobby">
       <h2 class="text-center">Join a Lobby</h2>
       <p class="text-center lead mb-4">
         Join a lobby that has already been created.
