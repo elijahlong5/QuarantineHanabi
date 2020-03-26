@@ -1,4 +1,7 @@
 import wtforms
+import string
+
+name_characters = string.ascii_letters + string.digits
 
 
 class ValidAccessToken:
@@ -14,10 +17,6 @@ class ValidAccessToken:
         if token not in lobbies:
             raise wtforms.ValidationError(self.message)
 
-
-import string
-
-name_characters = string.ascii_letters + string.digits
 
 def has_valid_asciis(word):
     for char in word:
@@ -39,3 +38,19 @@ class ValidAsciiValues:
         requested_player_id = field.data
         if not has_valid_asciis(requested_player_id):
             raise wtforms.ValidationError(self.message)
+
+
+class ValidUnclaimedUsername:
+    def __init__(self, message=None):
+        if not message:
+            message = "This username has already been chosen."
+        self.message = message
+
+    def __call__(self, form, field):
+        lobbies = getattr(form, "lobbies", {})
+        token = form.access_token.data
+        if token in lobbies:
+            used_player_names = lobbies[token].players
+            requested_player_name = field.data
+            if requested_player_name in used_player_names:
+                raise wtforms.ValidationError(self.message)

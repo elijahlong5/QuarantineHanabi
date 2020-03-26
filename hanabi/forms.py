@@ -2,7 +2,11 @@ import wtforms
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 
-from hanabi.validators import ValidAccessToken, ValidAsciiValues
+from hanabi.validators import (
+    ValidAccessToken,
+    ValidAsciiValues,
+    ValidUnclaimedUsername,
+)
 
 
 class CreateLobbyForm(FlaskForm):
@@ -20,12 +24,16 @@ class JoinLobbyForm(FlaskForm):
         "Access Token", validators=[DataRequired(), ValidAccessToken()]
     )
     name = wtforms.StringField(
-        "Name", validators=[DataRequired(), ValidAsciiValues()]
+        "Name",
+        validators=[
+            DataRequired(),
+            ValidAsciiValues(),
+            ValidUnclaimedUsername(),
+        ],
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.lobbies = None
 
     def validate(self, lobbies):
