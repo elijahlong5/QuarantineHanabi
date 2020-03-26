@@ -2,7 +2,7 @@ import pytest
 from werkzeug.exceptions import HTTPException
 
 import run
-from Game import HanabiGame, Player
+from game import HanabiGame, Player
 from run import lobby_api
 
 

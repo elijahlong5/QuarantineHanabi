@@ -2,7 +2,7 @@ import wtforms
 from flask_wtf import FlaskForm
 from wtforms.validators import DataRequired
 
-from validators import ValidAccessToken
+from hanabi.validators import ValidAccessToken
 
 
 class CreateLobbyForm(FlaskForm):

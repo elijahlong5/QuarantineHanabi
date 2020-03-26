@@ -2,7 +2,7 @@
   <configuration default="false" name="Run Server" type="Python.FlaskServer">
     <option name="flaskDebug" value="true" />
     <module name="QuarantineHanabi" />
-    <option name="target" value="$PROJECT_DIR$/QuarantineHanabi/run.py" />
+    <option name="target" value="$PROJECT_DIR$/run.py" />
     <option name="targetType" value="PATH" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />

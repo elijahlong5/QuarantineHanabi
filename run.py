@@ -10,8 +10,8 @@ from flask import (
     url_for,
 )
 
-import forms
-from Game import HanabiGame
+from hanabi import forms
+from hanabi.game import HanabiGame
 
 
 app = Flask(__name__)
@@ -142,7 +142,3 @@ def start_game():
 @app.route("/api/lobbies/<access_code>/game-in-session")
 def is_game_on(access_code):
     return hanabi_lobbies[access_code].game_in_session
-
-
-if __name__ == "__main__":
-    app.run()
