@@ -91,8 +91,15 @@ def join_lobby():
 def start_game():
     access_code = request.form["access_code"]
     game_instance = hanabi_lobbies[access_code]
-    game_instance.start_game()
+
     player_id = request.form["player_id"]
+
+    game_instance.add_player("Ahna")
+    game_instance.add_player("Bill")
+    game_instance.add_player("Sam")
+
+    game_instance.start_game()
+
     return redirect(
         url_for(
             "game_in_session",
