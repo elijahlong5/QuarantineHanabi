@@ -15,12 +15,13 @@ class ValidAccessToken:
             raise wtforms.ValidationError(self.message)
 
 
+import string
+
+name_characters = string.ascii_letters + string.digits
+
 def has_valid_asciis(word):
     for char in word:
-        asc_val = ord(char)
-        if not (
-            48 <= asc_val <= 57 or 65 <= asc_val <= 90 or 97 <= asc_val <= 122
-        ):
+        if char not in name_characters:
             return False
     return True
 
