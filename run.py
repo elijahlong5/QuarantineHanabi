@@ -38,11 +38,9 @@ def main(create_form=None, join_form=None):
 
 @app.route("/api/game-in-session/<access_code>/<player_id>/")
 def game_in_session_api(access_code, player_id):
-    print(access_code, player_id)
     if access_code not in hanabi_lobbies:
         abort(404)
     game_state = hanabi_lobbies[access_code].get_game_state(player_id)
-    print(game_state)
     return jsonify(game_state)
 
 
@@ -93,7 +91,9 @@ def create_lobby():
     access_code = "hanab"
     hanabi_lobbies[access_code] = game
 
-    return redirect(url_for("lobby", access_code=access_code))
+    return redirect(
+        url_for("lobby", access_code=access_code, player_id=form.name.data)
+    )
 
 
 @app.route("/join-lobby/", methods=["post"])
@@ -142,3 +142,12 @@ def start_game():
 @app.route("/api/lobbies/<access_code>/game-in-session")
 def is_game_on(access_code):
     return hanabi_lobbies[access_code].game_in_session
+
+
+@app.route("/api/player-response/<access_code>/<player_id>/", methods=["post"])
+def handle_player_move(access_code, player_id):
+    dict = request.json
+    game = hanabi_lobbies[access_code]
+    game.handle_move_request(dict, player_id)
+
+    return jsonify(game.get_game_state(player_id))
