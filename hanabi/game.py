@@ -1,17 +1,25 @@
 from collections import namedtuple
 import random
 
-Card = namedtuple("Card", ["Color", "Rank"])
+Card = namedtuple("Card", ["Color", "Rank", "Id"])
+
+card_num_counts = {
+    1: 3,
+    2: 2,
+    3: 2,
+    4: 2,
+    5: 1,
+}
 
 
 def create_deck():
     deck = []
-    for c in ["Red", "Green", "Yellow", "White", "Blue"]:
-        deck.append(Card(c, 1))
-        for i in range(1, 6):
-            deck.append(Card(c, i))
-            if i != 5:
-                deck.append(Card(c, i))
+    cur_id = 0
+    for color in ["Red", "Green", "Yellow", "White", "Blue"]:
+        for num in range(1, 6):
+            for card in range(card_num_counts[num]):
+                deck.append(Card(color, num, cur_id))
+                cur_id += 1
     return deck
 
 
@@ -32,11 +40,7 @@ class Deck:
         self.shuffle()
 
     def shuffle(self):
-        for i in range(len(self.deck) - 1, 0, -1):
-            # Pick a random index from 0 to i
-            j = random.randint(0, i + 1)
-            # Swap arr[i] with the element at random index
-            self.deck[i], self.deck[j] = self.deck[j], self.deck[i]
+        random.shuffle(self.deck)
 
     def draw_card(self):
         self.cards_left -= 1
@@ -75,14 +79,10 @@ class HanabiGame:
         self.bomb_count = 3
         self.piles = []
         self.whose_turn = "JAH"
-        print("--------starting game-------")
-        for p in self.players.values():
-            print(p.name)
-            for c in p.hand:
-                print(f"The {c.Color} {c.Rank}.")
 
     def get_game_state(self, player_id):
         game_state = {
+            "whose-game-state": player_id,
             "players": {},
             "game-log": self.game_log,
             "piles": self.piles,
@@ -95,10 +95,15 @@ class HanabiGame:
             if p.name != player_id:
                 game_state["players"][p.name] = p.hand
             else:
-                game_state["players"][p.name] = []
+                game_state["players"][p.name] = {
+                    0: 0,
+                    1: 1,
+                    2: 2,
+                    3: 3,
+                }
         return game_state
 
-    def handle_move_request(self, move_request):
+    def handle_move_request(self, move_request, player_id):
         # check if the it is this players' turn
         if self.whose_turn == move_request["player-id"]:
             # make the move

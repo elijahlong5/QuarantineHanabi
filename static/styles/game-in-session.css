@@ -7,14 +7,14 @@
     margin-right: 200px;
 }
 
-#hands > div > img {
+.cards-container > img {
     max-width: 150px;
     margin-right: -120px;
     margin-top: 50px;
     transition: all .2s ease-in;
 }
 
-#hands > div > img:hover {
+.cards-container > img:hover {
     padding-bottom: 50px;
     margin-top: 0;
 }

@@ -25,6 +25,7 @@
       $(document).ready(function() {
           const urlParts = window.location.pathname.split("/");
           const accessToken = urlParts[2];
+          const playerId = urlParts[4];
 
           startPollingPlayerList(accessToken, "#player-list");
       });
