@@ -3,8 +3,26 @@
     flex-wrap: wrap;
 }
 
+#deck {
+    position: relative;
+    max-width: 150px;
+}
+
+.centered {
+    position: absolute;
+    text-align: center;
+    font-size: 110%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
 #hands > div {
     margin-right: 200px;
+}
+
+.card {
+    max-width: 150px;
 }
 
 .cards-container > img {

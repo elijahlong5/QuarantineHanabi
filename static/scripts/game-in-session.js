@@ -35,7 +35,8 @@ function initiateDisplay(accessToken, playerId) {
         .then( function (gameState) {
             console.log(gameState);
             let baseLink = "/static/hanabi_deck/";
-
+            let cardBackLink = baseLink + "card_back.png"
+            // Display players' hands
             for (let curPId in gameState['players']) {
                 // make player div
                 let playerDiv = document.createElement("div");
@@ -55,7 +56,7 @@ function initiateDisplay(accessToken, playerId) {
                     let color = gameState['players'][curPId][card][0];
                     let rank = gameState['players'][curPId][card][1];
                     let cardId = gameState['players'][curPId][card][2];
-                    let link = (curPId === playerId) ? (baseLink+"card_back.png") : (baseLink+color+"_"+rank+".png");
+                    let link = (curPId === playerId) ? (cardBackLink) : (baseLink+color+"_"+rank+".png");
                     curImg.src = link;
                     cardsDiv.appendChild(curImg);
                     curImg.addEventListener("click", function() {
@@ -84,6 +85,20 @@ function initiateDisplay(accessToken, playerId) {
                     });
                 }
             }
+            // Display deck.
+            let deckImg = document.createElement("img");
+            deckImg.classList.add("card");
+            deckImg.src = cardBackLink;
+            $("#deck").append(deckImg);
+            let deckCount = document.createElement("h3");
+            deckCount.innerHTML = "Remaining:</br>" + gameState['cards-in-deck'];
+            deckCount.classList.add("centered");
+            $("#deck").append(deckCount);
+
+            // Display Bomb Count.
+            let bombCountTitle = document.createElement("h3");
+            bombCountTitle.innerText = "Bombs remaining: " + gameState['bomb-count'];
+            $("#bombs").append(bombCountTitle);
         });
 }
 

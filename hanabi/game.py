@@ -89,6 +89,7 @@ class HanabiGame:
             "discard-pile": self.discard_pile,
             "bomb-count": self.bomb_count,
             "whose-turn": self.whose_turn,
+            "cards-in-deck": self.deck.cards_left,
         }
 
         for p in self.players.values():
