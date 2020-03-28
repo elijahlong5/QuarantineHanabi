@@ -28,6 +28,7 @@
           const playerId = urlParts[4];
 
           startPollingPlayerList(accessToken, "#player-list");
+          pollGameState(accessToken, playerId);
       });
   </script>
 {% endblock %}
