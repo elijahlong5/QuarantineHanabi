@@ -8,8 +8,7 @@ from flask import (
 )
 from sqlalchemy.orm import joinedload
 
-from hanabi import app, forms, models, db
-from hanabi.game import HanabiGame
+from hanabi import app, db, forms, models
 
 
 hanabi_lobbies = {}
@@ -77,14 +76,7 @@ def create_lobby():
     if not form.validate_on_submit():
         return main(create_form=form)
 
-    # TODO: Delete this
-    game = HanabiGame()
-    game.add_player(form.name.data)
-
     access_code = models.Lobby.generate_code()
-    # TODO: Delete this
-    hanabi_lobbies[access_code] = game
-
     new_lobby = models.Lobby(code=access_code)
     db.session.add(new_lobby)
 
