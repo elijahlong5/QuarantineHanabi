@@ -115,13 +115,12 @@ class HanabiGame:
         if self.whose_turn == player_id:
             # make the move
             if move_request["move"] == "play":
-                status = self.play_card(move_request)
+                self.play_card(move_request)
             elif move_request["move"] == "discard":
-                status = self.discard(move_request)
+                self.discard(move_request)
             elif move_request["move"] == "hint":
-                status = self.give_hint(move_request)
+                self.give_hint(move_request)
             self.increment_turn()
-            return {"status": status}
         else:
             return {"status": "not your turn"}
 
@@ -134,11 +133,10 @@ class HanabiGame:
     def add_bomb(self):
         self.bomb_count -= 1
         if self.bomb_count == 0:
-            print("game over")
+            print("-----game over---- (in add_bomb())")
 
     def increment_turn(self):
         index = list(self.players.keys()).index(self.whose_turn)
-        print(index)
         new_index = (index + 1) % 4
         self.whose_turn = list(self.players.keys())[new_index]
 
@@ -162,11 +160,15 @@ class HanabiGame:
             self.piles[color] = rank
             if rank == 5:
                 self.add_hint()
-            return f"Nice, you played {color} {rank}."
+            log_move = f"{p.name} played a {color} {rank} (valid play)."
         else:
             # The card was unplayable
             self.add_bomb()
-            return f"Oh No a bomb, you tried to play the {color} {rank}."
+            log_move = (
+                f"Bomb! {p.name} tried to play  a "
+                f"{color} {rank} (invalid play)."
+            )
+        self.game_log.append(log_move)
 
     def discard_card(self, move_request):
         card_index = int(move_request["card-index"])  # Index 0-3
@@ -175,7 +177,7 @@ class HanabiGame:
         self.add_hint()
 
         self.discard_pile.append(card)
-        return f"You discarded the {card.Color} {card.Rank}"
 
     def give_hint(self, move_request):
+        self.game_log.append(f"{self.whose_turn} gave a hint.")
         return "You gave a hint... smgdh."
