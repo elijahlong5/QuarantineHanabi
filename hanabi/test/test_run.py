@@ -1,17 +1,18 @@
 import pytest
 from werkzeug.exceptions import HTTPException
 
-import run
-from game import HanabiGame, Player
-from run import lobby_api
+import hanabi
+from hanabi import routes
+from hanabi.game import HanabiGame, Player
+from hanabi.routes import lobby_api
 
 
 @pytest.fixture(autouse=True)
 def flask_context():
     # Have to reset global state every test
-    run.hanabi_lobbies = {}
+    routes.hanabi_lobbies = {}
 
-    with run.app.app_context():
+    with hanabi.app.app_context():
         yield
 
 
@@ -27,7 +28,7 @@ def test_lobby_api():
     game = HanabiGame()
     game.players = players
 
-    run.hanabi_lobbies[access_token] = game
+    routes.hanabi_lobbies[access_token] = game
 
     expected_data = {
         "players": {
