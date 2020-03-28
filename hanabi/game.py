@@ -76,6 +76,7 @@ class HanabiGame:
                 p.give_card(self.deck.draw_card())
 
     def start_game(self):
+        self.game_in_session = True
         self.deal()
         self.discard_pile = []
         self.bomb_count = 3
@@ -120,9 +121,7 @@ class HanabiGame:
             elif move_request["move"] == "hint":
                 status = self.give_hint(move_request)
             self.increment_turn()
-            return {
-                "status": status,
-            }
+            return {"status": status}
         else:
             return {"status": "not your turn"}
 

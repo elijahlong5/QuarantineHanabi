@@ -139,15 +139,15 @@ def start_game():
     )
 
 
-@app.route("/api/lobbies/<access_code>/game-in-session")
+@app.route("/api/is-game-on/<access_code>/")
 def is_game_on(access_code):
-    return hanabi_lobbies[access_code].game_in_session
+    return jsonify({"status": hanabi_lobbies[access_code].game_in_session})
 
 
 @app.route("/api/player-response/<access_code>/<player_id>/", methods=["post"])
 def handle_player_move(access_code, player_id):
     dict = request.json
     game = hanabi_lobbies[access_code]
-    response_status = game.handle_move_request(dict, player_id)
+    game.handle_move_request(dict, player_id)
 
-    return jsonify(response_status)
+    return jsonify(game.get_game_state(player_id))
