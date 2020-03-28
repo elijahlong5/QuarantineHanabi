@@ -7,7 +7,7 @@ from flask import (
     url_for,
 )
 
-from hanabi import app, forms
+from hanabi import app, forms, models, db
 from hanabi.game import HanabiGame
 
 
@@ -77,8 +77,12 @@ def create_lobby():
     game = HanabiGame()
     game.add_player(form.name.data)
 
-    access_code = "hanab"
+    access_code = models.Lobby.generate_code()
     hanabi_lobbies[access_code] = game
+
+    new_lobby = models.Lobby(code=access_code)
+    db.session.add(new_lobby)
+    db.session.commit()
 
     return redirect(
         url_for("lobby", access_code=access_code, player_id=form.name.data)
