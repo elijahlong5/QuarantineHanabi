@@ -8,7 +8,7 @@ def get_db_url():
     password = os.getenv("DB_PASSWORD", "")
     database = os.getenv("DB_NAME", "postgres")
 
-    return f"postgres://{user}:{password}@{host}:{port}/{database}"
+    return f"postgresql://{user}:{password}@{host}:{port}/{database}"
 
 
 def get_secret_key():

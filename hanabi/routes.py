@@ -6,6 +6,7 @@ from flask import (
     request,
     url_for,
 )
+from sqlalchemy.orm import joinedload
 
 from hanabi import app, forms, models, db
 from hanabi.game import HanabiGame
@@ -35,15 +36,17 @@ def get_game_state_api(access_code, player_id):
 
 @app.route("/api/lobby/<access_code>/")
 def lobby_api(access_code):
-    if access_code not in hanabi_lobbies:
-        abort(404)
+    current_lobby = (
+        models.Lobby.query.options(joinedload(models.Lobby.players))
+        .filter_by(code=access_code)
+        .first_or_404()
+    )
 
-    game = hanabi_lobbies[access_code]
     players = {}
-    for player in game.players:
-        players[player] = {
-            "name": game.players[player].name,
-            "order": game.players[player].turn_order,
+    for player in current_lobby.players:
+        players[player.name] = {
+            "name": player.name,
+            "order": player.order,
         }
 
     return jsonify({"players": players})
@@ -74,14 +77,20 @@ def create_lobby():
     if not form.validate_on_submit():
         return main(create_form=form)
 
+    # TODO: Delete this
     game = HanabiGame()
     game.add_player(form.name.data)
 
     access_code = models.Lobby.generate_code()
+    # TODO: Delete this
     hanabi_lobbies[access_code] = game
 
     new_lobby = models.Lobby(code=access_code)
     db.session.add(new_lobby)
+
+    player = models.Player(lobby=new_lobby, name=form.name.data, order=0)
+    db.session.add(player)
+
     db.session.commit()
 
     return redirect(
@@ -93,12 +102,27 @@ def create_lobby():
 def join_lobby():
     form = forms.JoinLobbyForm(prefix="join-lobby-")
 
-    if form.validate(hanabi_lobbies):
+    if form.validate():
         access_token = form.access_token.data
         name = form.name.data
 
-        game = hanabi_lobbies[access_token]
-        game.add_player(name)
+        lobby_to_join = models.Lobby.query.filter_by(
+            code=access_token
+        ).first_or_404()
+
+        previous_player = (
+            models.Player.query.filter_by(lobby=lobby_to_join)
+            .order_by(models.Player.order.desc())
+            .first()
+        )
+        app.logger.debug(
+            "Previous player has order: %d", previous_player.order
+        )
+        player = models.Player(
+            lobby=lobby_to_join, name=name, order=previous_player.order + 1
+        )
+        db.session.add(player)
+        db.session.commit()
 
         return redirect(
             url_for("lobby", access_code=access_token, player_id=name)

@@ -50,10 +50,12 @@ class ValidUnclaimedUsername:
         self.message = message
 
     def __call__(self, form, field):
-        lobbies = getattr(form, "lobbies", {})
         token = form.access_token.data
-        if token in lobbies:
-            used_player_names = lobbies[token].players
-            requested_player_name = field.data
-            if requested_player_name in used_player_names:
-                raise wtforms.ValidationError(self.message)
+        player_exists = (
+            models.Player.query.join(models.Lobby)
+            .filter(models.Lobby.code == token)
+            .filter(models.Player.name == field.data)
+            .scalar()
+        )
+        if player_exists:
+            raise wtforms.ValidationError(self.message)

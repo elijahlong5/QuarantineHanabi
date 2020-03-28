@@ -1,8 +1,9 @@
 import random
 import uuid
 
-from sqlalchemy import VARCHAR
+from sqlalchemy import VARCHAR, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from hanabi import db
 
@@ -23,6 +24,8 @@ class Lobby(db.Model):
     id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     code = db.Column(VARCHAR(CODE_LENGTH), nullable=False, unique=True)
 
+    players = relationship("Player", back_populates="lobby")
+
     @classmethod
     def generate_code(cls) -> str:
         """
@@ -36,3 +39,15 @@ class Lobby(db.Model):
             A random string that can be used to access the lobby.
         """
         return "".join(random.choices(cls.CODE_CHARACTERS, k=5))
+
+
+class Player(db.Model):
+
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
+    lobby_id = db.Column(
+        UUID(as_uuid=True), ForeignKey("lobby.id"), nullable=False
+    )
+    name = db.Column(VARCHAR, nullable=False)
+    order = db.Column(Integer, nullable=False)
+
+    lobby = relationship("Lobby", back_populates="players")
