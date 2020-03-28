@@ -8,6 +8,17 @@ from sqlalchemy.orm import relationship
 from hanabi import db
 
 
+class Game(db.Model):
+
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
+    is_in_progress = db.Column(db.Boolean, nullable=False)
+    lobby_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("lobby.id"), nullable=False
+    )
+
+    lobby = db.relationship("Lobby", back_populates="games")
+
+
 class Lobby(db.Model):
     CODE_CHARACTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
     """
