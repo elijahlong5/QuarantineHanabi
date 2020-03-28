@@ -69,7 +69,7 @@ function initiateDisplay(accessToken, playerId) {
                         let hintType = (curPId === playerId) ? null : "rank";
 
                         let moveDict = {
-                            "move": move,// = play discard or hint
+                            "move": move, // = play discard or hint
                             "card-index": cardIndex, // REQUIRED: 0-3 index for what card is selected
                             "player-id": curPId, // REQUIRED: = key if play or discard. otherwise, who they are hinting to
                             "hint-type": hintType, // REQUIRED IF HINT: either rank or color.
@@ -80,7 +80,7 @@ function initiateDisplay(accessToken, playerId) {
 
                         fetchPostPlayerMove(moveDict, accessToken, playerId).then(r => {
                             console.log(r);
-                            // Todo: update display
+                            alert(r["status"]);
                         })
                     });
                 }

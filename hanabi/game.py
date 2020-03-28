@@ -2,6 +2,8 @@ from collections import namedtuple
 import random
 
 Card = namedtuple("Card", ["Color", "Rank", "Id"])
+Colors = ["Red", "Green", "Yellow", "White", "Blue"]
+
 
 card_num_counts = {
     1: 3,
@@ -15,7 +17,7 @@ card_num_counts = {
 def create_deck():
     deck = []
     cur_id = 0
-    for color in ["Red", "Green", "Yellow", "White", "Blue"]:
+    for color in Colors:
         for num in range(1, 6):
             for card in range(card_num_counts[num]):
                 deck.append(Card(color, num, cur_id))
@@ -53,13 +55,13 @@ class HanabiGame:
         self.deck = Deck()
         self.HAND_LIMIT = 4
         self.order = 0
-
         self.game_log = []
+        self.hints_left = 8
         self.players = {}
         self.discard_pile = []
-        self.piles = []
         self.bomb_count = 3
-        self.whose_turn = ""
+        self.whose_turn = 0
+        self.piles = {}
 
     def add_player(self, name):
         if name in self.players.keys():
@@ -77,8 +79,11 @@ class HanabiGame:
         self.deal()
         self.discard_pile = []
         self.bomb_count = 3
-        self.piles = []
-        self.whose_turn = "JAH"
+        self.piles = {}
+        for c in Colors:
+            self.piles[c] = 0
+        start = random.choice(list(self.players.keys()))
+        self.whose_turn = start
 
     def get_game_state(self, player_id):
         game_state = {
@@ -106,33 +111,72 @@ class HanabiGame:
 
     def handle_move_request(self, move_request, player_id):
         # check if the it is this players' turn
-        if self.whose_turn == move_request["player-id"]:
+        if self.whose_turn == player_id:
             # make the move
             if move_request["move"] == "play":
-                return self.play_card(move_request)
+                status = self.play_card(move_request)
             elif move_request["move"] == "discard":
-                return self.discard(move_request)
+                status = self.discard(move_request)
             elif move_request["move"] == "hint":
-                return self.give_hint(move_request)
+                status = self.give_hint(move_request)
+            self.increment_turn()
+            return {
+                "status": status,
+            }
         else:
-            return ValueError
+            return {"status": "not your turn"}
+
+    def add_hint(self):
+        self.hints_left = (self.hints_left + 1) if self.hints_left < 7 else 8
+
+    def remove_hint(self):
+        self.hints_left = (self.hints_left - 1) if self.hints > 1 else 0
+
+    def add_bomb(self):
+        self.bomb_count -= 1
+        if self.bomb_count == 0:
+            print("game over")
+
+    def increment_turn(self):
+        index = list(self.players.keys()).index(self.whose_turn)
+        print(index)
+        new_index = (index + 1) % 4
+        self.whose_turn = list(self.players.keys())[new_index]
 
     # Possible moves
-    def less_card_helper(self, player, card):
+    def less_card_helper(self, player, card_index):
         p = player
-        p.hand.pop(card)
+        card = p.hand.pop(card_index)
         if self.deck.cards_left > 0:
             p.give_card(self.deck.draw_card())
         return card
 
     def play_card(self, move_request):
-        card = move_request["card"]
+        card_index = int(move_request["card-index"])  # Index 0-3
         p = self.players[move_request["player-id"]]
-        self.less_card_helper(p, card)
-        self.piles.append(card)
+
+        card = self.less_card_helper(p, card_index)
+        rank = int(card.Rank)
+        color = card.Color
+        if self.piles[color] == rank - 1:
+            # Th card is valid to play
+            self.piles[color] = rank
+            if rank == 5:
+                self.add_hint()
+            return f"Nice, you played {color} {rank}."
+        else:
+            # The card was unplayable
+            self.add_bomb()
+            return f"Oh No a bomb, you tried to play the {color} {rank}."
 
     def discard_card(self, move_request):
-        card = move_request["card"]
+        card_index = int(move_request["card-index"])  # Index 0-3
         p = self.players[move_request["player-id"]]
-        self.less_card_helper(p, card)
+        card = self.less_card_helper(p, card_index)
+        self.add_hint()
+
         self.discard_pile.append(card)
+        return f"You discarded the {card.Color} {card.Rank}"
+
+    def give_hint(self, move_request):
+        return "You gave a hint... smgdh."
