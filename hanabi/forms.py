@@ -31,13 +31,3 @@ class JoinLobbyForm(FlaskForm):
             ValidUnclaimedUsername(),
         ],
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.lobbies = None
-
-    def validate(self, lobbies):
-        # Cache the lobbies on the form so that the access token
-        # validator can get them.
-        self.lobbies = lobbies
-        return super().validate()

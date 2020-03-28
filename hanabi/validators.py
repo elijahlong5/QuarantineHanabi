@@ -1,6 +1,9 @@
 import wtforms
 import string
 
+from hanabi import models
+
+
 name_characters = string.ascii_letters + string.digits
 
 
@@ -12,9 +15,9 @@ class ValidAccessToken:
         self.message = message
 
     def __call__(self, form, field):
-        lobbies = getattr(form, "lobbies", {})
-        token = field.data
-        if token not in lobbies:
+        lobby_exists = models.Lobby.query.filter_by(code=field.data).scalar()
+
+        if not lobby_exists:
             raise wtforms.ValidationError(self.message)
 
 
