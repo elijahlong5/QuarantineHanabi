@@ -16,11 +16,8 @@
 
         <div class="row justify-content-center">
           <div class="col-12 col-md-6 col-sm-4 form-group">
-            <label for="create-lobby-name">{{ create_form.name.label }}</label>
-            <input class="form-control"
-                   id="create-lobby-name"
-                   name="{{ join_form.name.name }}"
-                   required>
+            {{ create_form.name.label }}
+            {{ create_form.name(class_='form-control', id='create-lobby-name') }}
             {% if create_form.errors.name %}
               <small id="create-lobby-name-error" class="form-text text-danger">
                 {{ ' '.join(create_form.errors.name) }}
@@ -46,11 +43,8 @@
 
         <div class="row">
           <div class="col form-group">
-            <label for="join-lobby-name">{{ join_form.name.label }}</label>
-            <input class="form-control"
-                   id="join-lobby-name"
-                   name="{{ join_form.name.name }}"
-                   required>
+            {{ join_form.name.label }}
+            {{ join_form.name(class_='form-control', id='join-lobby-name') }}
             {% if join_form.errors.name %}
               <small id="join-lobby-name-error" class="form-text text-danger">
                 {{ ' '.join(join_form.errors.name) }}
@@ -59,13 +53,8 @@
           </div>
 
           <div class="col form-group">
-            <label for="join-lobby-access-code">
-              {{ join_form.access_token.label }}
-            </label>
-            <input class="form-control"
-                   id="join-lobby-access-code"
-                   name="{{ join_form.access_token.name }}"
-                   required>
+            {{ join_form.access_token.label }}
+            {{ join_form.access_token(class='form-control') }}
             {% if join_form.errors.access_token %}
               <small id="join-lobby-access-token-error" class="form-text text-danger">
                 {{ ' '.join(join_form.errors.access_token) }}

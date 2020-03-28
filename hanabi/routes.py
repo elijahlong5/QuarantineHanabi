@@ -17,8 +17,8 @@ hanabi_lobbies = {}
 @app.route("/")
 @app.route("/home/")
 def main(create_form=None, join_form=None):
-    create_form = create_form or forms.CreateLobbyForm()
-    join_form = join_form or forms.JoinLobbyForm()
+    create_form = create_form or forms.CreateLobbyForm(prefix="create-lobby-")
+    join_form = join_form or forms.JoinLobbyForm(prefix="join-lobby-")
 
     return render_template(
         "main.html", create_form=create_form, join_form=join_form
@@ -70,7 +70,7 @@ def game_in_session(access_code, player_id):
 
 @app.route("/create-lobby/", methods=["post"])
 def create_lobby():
-    form = forms.CreateLobbyForm()
+    form = forms.CreateLobbyForm(prefix="create-lobby-")
     if not form.validate_on_submit():
         return main(create_form=form)
 
@@ -87,7 +87,7 @@ def create_lobby():
 
 @app.route("/join-lobby/", methods=["post"])
 def join_lobby():
-    form = forms.JoinLobbyForm()
+    form = forms.JoinLobbyForm(prefix="join-lobby-")
 
     if form.validate(hanabi_lobbies):
         access_token = form.access_token.data
