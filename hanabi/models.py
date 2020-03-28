@@ -51,3 +51,10 @@ class Player(db.Model):
     order = db.Column(Integer, nullable=False)
 
     lobby = relationship("Lobby", back_populates="players")
+
+    __table_args__ = (
+        db.UniqueConstraint("lobby_id", "name", name="uix_lobby_players"),
+        db.UniqueConstraint(
+            "lobby_id", "order", name="uix_lobby_player_order"
+        ),
+    )
