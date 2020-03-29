@@ -1,11 +1,12 @@
 import enum
+import logging
 import random
 import uuid
 
 from sqlalchemy import func, VARCHAR, Integer
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 
-from hanabi import db
+from hanabi import db, app
 
 
 CARD_COUNT_MAP = {
@@ -52,7 +53,7 @@ class Action(db.Model):
     game_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("game.id"), nullable=False
     )
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     player_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("player.id"), nullable=False
     )
@@ -94,7 +95,7 @@ class DiscardAction(db.Model):
     card_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("card.id"), nullable=False
     )
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
 
     action = db.relationship("Action")
     card = db.relationship("Card")
@@ -108,7 +109,7 @@ class DrawAction(db.Model):
     card_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("card.id"), nullable=False
     )
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
 
     action = db.relationship("Action")
     card = db.relationship("Card")
@@ -168,6 +169,32 @@ class Game(db.Model):
             .first_or_404()
         )
 
+    def deal_card(self, player):
+        drawn_cards = (
+            Card.query.join(DrawAction)
+            .join(Action)
+            .filter(Action.game == self)
+            .with_entities(Card.id)
+        )
+        next_card = (
+            Card.query.filter_by(game=self)
+            .filter(Card.id.notin_(drawn_cards))
+            .first()
+        )
+
+        draw_action = Action(
+            action_type=ActionType.DRAW, game=self, player=player
+        )
+        draw_action_data = DrawAction(action=draw_action, card=next_card)
+
+        db.session.add(draw_action)
+        db.session.add(draw_action_data)
+        db.session.commit()
+
+        current_cards = player.current_hand(self)
+        current_cards.insert(0, next_card)
+        player.set_hand(self, current_cards)
+
     def game_state(self, player_name: str) -> dict:
         return {
             "whose-game-state": player_name,
@@ -193,12 +220,19 @@ class Game(db.Model):
     @property
     def remaining_card_count(self):
         deck_length = Card.query.filter_by(game=self).count()
+
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
+
+        total_draw_actions = DrawAction.query.join(Action).count()
+        app.logger.debug("Total draw actions: %d", total_draw_actions)
+
         drawn_card_count = (
-            Card.query.join(DrawAction)
-            .join(Action)
-            .filter(Action.game == self)
-            .count()
+            DrawAction.query.join(Action).filter_by(game=self).count()
         )
+        app.logger.info("Total cards: %d", deck_length)
+        app.logger.info("Cards drawn: %d", drawn_card_count)
+
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.ERROR)
 
         return deck_length - drawn_card_count
 
@@ -240,7 +274,7 @@ class HintAction(db.Model):
         UUID(as_uuid=True), db.ForeignKey("card.id"), nullable=False
     )
     color = db.Column(ENUM(CardColor, create_type=False), nullable=True)
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     number = db.Column(db.SmallInteger, nullable=True)
     target_player_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("player.id"), nullable=False
@@ -299,7 +333,7 @@ class PlayAction(db.Model):
     card_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("card.id"), nullable=False
     )
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     was_successful = db.Column(db.Boolean, nullable=False)
 
     action = db.relationship("Action")
@@ -325,13 +359,45 @@ class Player(db.Model):
         ),
     )
 
+    def current_hand(self, game):
+        latest_hand_action = (
+            SetPlayerHandAction.query.join(Action)
+            .filter(Action.game == game)
+            .filter(Action.player == self)
+            .order_by(Action.created_at.desc())
+            .first()
+        )
+        player_cards = SetPlayerHandActionCard.query.filter_by(
+            set_hand_action=latest_hand_action
+        ).order_by(SetPlayerHandActionCard.order.asc())
+
+        return [player_card.card for player_card in player_cards]
+
+    def set_hand(self, game, cards):
+        set_hand_action = Action(
+            action_type=ActionType.SET_HAND_ORDER, game=game, player=self
+        )
+        set_hand_data = SetPlayerHandAction(action=set_hand_action)
+
+        player_cards = []
+        for i, card in enumerate(cards):
+            player_cards.append(
+                SetPlayerHandActionCard(
+                    card=card, order=i, set_hand_action=set_hand_data
+                )
+            )
+
+        db.session.add(set_hand_action)
+        db.session.add(set_hand_data)
+        db.session.commit()
+
 
 class SetPlayerHandAction(db.Model):
 
     action_id = db.Column(
         UUID(as_uuid=True), db.ForeignKey("action.id"), nullable=False
     )
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
 
     action = db.relationship("Action")
     player_cards = db.relationship(
@@ -342,7 +408,7 @@ class SetPlayerHandAction(db.Model):
 class SetPlayerHandActionCard(db.Model):
 
     card_id = db.Column(UUID(as_uuid=True), db.ForeignKey("card.id"))
-    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     order = db.Column(db.SmallInteger, nullable=False)
     set_hand_action_id = db.Column(
         UUID(as_uuid=True),

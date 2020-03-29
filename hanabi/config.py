@@ -24,4 +24,5 @@ class Config:
     SECRET_KEY = get_secret_key()
 
     SQLALCHEMY_DATABASE_URI = get_db_url()
+    SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False

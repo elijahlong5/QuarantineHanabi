@@ -135,6 +135,12 @@ def start_game():
     game = models.Game.create_with_cards(current_lobby)
     game.is_in_progress = True
     db.session.add(game)
+
+    cards_per_hand = 5 if len(current_lobby.players) < 4 else 4
+    for _ in range(cards_per_hand):
+        for player in current_lobby.players:
+            game.deal_card(player)
+
     db.session.commit()
 
     player_id = request.form["player_id"]
