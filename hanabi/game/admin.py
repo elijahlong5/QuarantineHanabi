@@ -34,3 +34,18 @@ class LobbyMember(admin.ModelAdmin):
     list_filter = ("is_owner",)
     readonly_fields = ("created_at", "updated_at")
     search_fields = ("lobby__code", "name")
+
+
+@admin.register(models.Player)
+class PlayerAdmin(admin.ModelAdmin):
+    autocomplete_fields = ("game", "lobby_member")
+    fields = ("game", "lobby_member", "order", "created_at", "updated_at")
+    list_display = (
+        "lobby_member",
+        "game",
+        "order",
+        "created_at",
+        "updated_at",
+    )
+    readonly_fields = ("created_at", "updated_at")
+    search_fields = ("game__lobby_member__lobby__code", "lobby_member__name")
