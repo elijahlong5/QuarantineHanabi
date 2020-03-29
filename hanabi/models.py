@@ -335,7 +335,7 @@ class SetPlayerHandAction(db.Model):
 
     action = db.relationship("Action")
     player_cards = db.relationship(
-        "SetPlayerHandActionCard", back_populates="card"
+        "SetPlayerHandActionCard", back_populates="set_hand_action"
     )
 
 
