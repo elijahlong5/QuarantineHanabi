@@ -7,7 +7,7 @@ from hanabi import db
 
 
 class ActionType(enum.Enum):
-    pass
+    PLAY = 1
 
 
 class Action(db.Model):
@@ -32,3 +32,18 @@ class Action(db.Model):
             "created_at", "game_id", name="uix_game_action_time"
         ),
     )
+
+
+class PlayAction(db.Model):
+
+    action_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("action.id"), nullable=False
+    )
+    card_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("card.id"), nullable=False
+    )
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    was_successful = db.Column(db.Boolean, nullable=False)
+
+    action = db.relationship("Action")
+    card = db.relationship("Card")

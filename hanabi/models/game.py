@@ -4,11 +4,13 @@ from random import random
 from sqlalchemy.dialects.postgresql import UUID
 
 from hanabi import db
+from .action import PlayAction
 from .card import CARD_COUNT_MAP, Card, CardColor
 from .lobby import Lobby
 
 
 class Game(db.Model):
+    INITIAL_BOMB_COUNT = 3
 
     id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     is_in_progress = db.Column(db.Boolean, nullable=False)
@@ -68,7 +70,17 @@ class Game(db.Model):
             "game-log": [],
             "piles": {},
             "discard-pile": [],
-            "bomb-count": 3,
+            "bomb-count": self.remaining_bomb_count,
             "whose-turn": player_name,
             "cards-in-deck": 0,
         }
+
+    @property
+    def remaining_bomb_count(self):
+        """
+        Returns:
+            The number of remaining bombs left.
+        """
+        failed_plays = PlayAction.query.filter_by(was_successful=False).count()
+
+        return max(0, self.INITIAL_BOMB_COUNT - failed_plays)
