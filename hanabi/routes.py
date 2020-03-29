@@ -1,5 +1,4 @@
 from flask import (
-    abort,
     jsonify,
     redirect,
     render_template,
@@ -27,9 +26,9 @@ def main(create_form=None, join_form=None):
 
 @app.route("/api/get-game-state/<access_code>/<player_id>/")
 def get_game_state_api(access_code, player_id):
-    if access_code not in hanabi_lobbies:
-        abort(404)
-    game_state = hanabi_lobbies[access_code].get_game_state(player_id)
+    game = models.Game.get_game_for_lobby_or_404(access_code)
+    game_state = game.game_state(player_id)
+
     return jsonify(game_state)
 
 
@@ -61,12 +60,13 @@ def lobby(access_code, player_id=None):
 
 @app.route("/game-in-session/<access_code>/player-id/<player_id>/")
 def game_in_session(access_code, player_id):
-    game_state = hanabi_lobbies[access_code].get_game_state(player_id)
+    game = models.Game.get_game_for_lobby_or_404(access_code)
+
     return render_template(
         "game-in-session.html",
         access_code=access_code,
         player_id=player_id,
-        game_state=game_state,
+        game_state=game.game_state(player_id),
     )
 
 

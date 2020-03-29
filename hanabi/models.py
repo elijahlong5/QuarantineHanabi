@@ -97,6 +97,27 @@ class Game(db.Model):
 
         return game
 
+    @classmethod
+    def get_game_for_lobby_or_404(cls, lobby_code: str) -> "Game":
+        return (
+            cls.query.join(Lobby)
+            .filter(Lobby.code == lobby_code)
+            .filter(cls.is_in_progress)
+            .first_or_404()
+        )
+
+    def game_state(self, player_name: str) -> dict:
+        return {
+            "whose-game-state": player_name,
+            "players": {},
+            "game-log": [],
+            "piles": {},
+            "discard-pile": [],
+            "bomb-count": 3,
+            "whose-turn": player_name,
+            "cards-in-deck": 0,
+        }
+
 
 class Lobby(db.Model):
     CODE_CHARACTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
