@@ -22,7 +22,14 @@ def upgrade():
         "action",
         sa.Column(
             "action_type",
-            sa.Enum("DISCARD", "PLAY", name="actiontype"),
+            sa.Enum(
+                "DISCARD",
+                "DRAW",
+                "HINT",
+                "PLAY",
+                "SET_HAND_ORDER",
+                name="actiontype",
+            ),
             nullable=False,
         ),
         sa.Column(
