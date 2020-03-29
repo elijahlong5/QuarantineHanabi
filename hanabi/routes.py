@@ -128,22 +128,23 @@ def join_lobby():
 @app.route("/start-game/", methods=["post"])
 def start_game():
     access_code = request.form["access_code"]
-    game_instance = hanabi_lobbies[access_code]
+    current_lobby = models.Lobby.query.filter_by(
+        code=access_code
+    ).first_or_404()
+
+    game = models.Game.create_with_cards(current_lobby)
+    game.is_in_progress = True
+    db.session.add(game)
+    db.session.commit()
 
     player_id = request.form["player_id"]
-
-    game_instance.add_player("Ahna")
-    game_instance.add_player("Bill")
-    game_instance.add_player("Sam")
-
-    game_instance.start_game()
 
     return redirect(
         url_for(
             "game_in_session",
             access_code=access_code,
             player_id=player_id,
-            game_state=game_instance.get_game_state(player_id),
+            game_state=None,
         )
     )
 

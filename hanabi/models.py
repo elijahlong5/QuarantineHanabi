@@ -1,12 +1,23 @@
-import random
 import enum
+import random
 import uuid
 
-from sqlalchemy import VARCHAR, ForeignKey, Integer
+from sqlalchemy import ForeignKey, Integer, VARCHAR
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
 
 from hanabi import db
+
+
+CARD_COUNT_MAP = {
+    1: 3,
+    2: 2,
+    3: 2,
+    4: 2,
+    5: 1,
+}
+"""
+A map specifying how many cards of each number should be created.
+"""
 
 
 class CardColor(enum.Enum):
@@ -51,7 +62,40 @@ class Game(db.Model):
         UUID(as_uuid=True), db.ForeignKey("lobby.id"), nullable=False
     )
 
+    cards = db.relationship("Card", back_populates="game")
     lobby = db.relationship("Lobby", back_populates="games")
+
+    @classmethod
+    def create_with_cards(cls, lobby: "Lobby") -> "Game":
+        """
+        Initialize a new game with a shuffled deck of cards.
+
+        Args:
+            lobby:
+                The lobby to create the game in.
+
+        Returns:
+            A new game with a set of shuffled cards.
+        """
+        game = cls(lobby=lobby)
+
+        cards = []
+        for color in CardColor:
+            for number, count in CARD_COUNT_MAP.items():
+                for _ in range(count):
+                    cards.append(
+                        Card(color=color, game_id=game.id, number=number)
+                    )
+
+        order_positions = list(range(len(cards)))
+        random.shuffle(order_positions)
+
+        for order, card in zip(order_positions, cards):
+            card.deck_order = order
+
+        game.cards = cards
+
+        return game
 
 
 class Lobby(db.Model):
@@ -70,7 +114,8 @@ class Lobby(db.Model):
     id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
     code = db.Column(VARCHAR(CODE_LENGTH), nullable=False, unique=True)
 
-    players = relationship("Player", back_populates="lobby")
+    games = db.relationship("Game", back_populates="lobby")
+    players = db.relationship("Player", back_populates="lobby")
 
     @classmethod
     def generate_code(cls) -> str:
@@ -96,7 +141,7 @@ class Player(db.Model):
     name = db.Column(VARCHAR, nullable=False)
     order = db.Column(Integer, nullable=False)
 
-    lobby = relationship("Lobby", back_populates="players")
+    lobby = db.relationship("Lobby", back_populates="players")
 
     __table_args__ = (
         db.UniqueConstraint("lobby_id", "name", name="uix_lobby_players"),
