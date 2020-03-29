@@ -1,7 +1,7 @@
 """Create play action table
 
 Revision ID: 769a02209a28
-Revises: 887fdd792448
+Revises: 24be25ba2ebf
 Create Date: 2020-03-29 00:26:42.958012
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "769a02209a28"
-down_revision = "887fdd792448"
+down_revision = "24be25ba2ebf"
 branch_labels = None
 depends_on = None
 
