@@ -8,10 +8,11 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - 5432:5432
-    volumes:
-      - "/tmp/hanabi-data:/var/lib/postgresql/data"
 
   migrations:
+    depends_on:
+      - postgres
+
     build:
       context: .
       target: devserver
@@ -26,6 +27,9 @@ services:
       DB_PASSWORD: password
 
   server:
+    depends_on:
+      - migrations
+
     build:
       context: .
       target: devserver
