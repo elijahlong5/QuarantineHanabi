@@ -3,6 +3,15 @@ from django.contrib import admin
 from game import models
 
 
+@admin.register(models.Game)
+class GameAdmin(admin.ModelAdmin):
+    fields = ("lobby", "is_in_progress", "created_at", "updated_at")
+    list_display = ("lobby", "is_in_progress", "created_at", "updated_at")
+    list_filter = ("is_in_progress",)
+    readonly_fields = ("created_at", "updated_at")
+    search_fields = ("lobby__code",)
+
+
 @admin.register(models.Lobby)
 class LobbyAdmin(admin.ModelAdmin):
     fields = ("code", "created_at", "updated_at")
