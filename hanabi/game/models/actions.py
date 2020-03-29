@@ -49,3 +49,27 @@ class Action(models.Model):
         unique_together = ("created_at", "game")
         verbose_name = _("action")
         verbose_name_plural = _("actions")
+
+
+class DiscardAction(models.Model):
+
+    action = models.OneToOneField(
+        "Action",
+        on_delete=models.CASCADE,
+        related_name="discard_action",
+        verbose_name=_("action"),
+    )
+    card = models.ForeignKey(
+        "Card",
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name=_("card"),
+    )
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+
+    class Meta:
+        order_with_respect_to = "action"
+        verbose_name = _("discard action")
+        verbose_name_plural = _("discard actions")
