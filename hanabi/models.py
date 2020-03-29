@@ -1,4 +1,5 @@
 import random
+import enum
 import uuid
 
 from sqlalchemy import VARCHAR, ForeignKey, Integer
@@ -6,6 +7,40 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from hanabi import db
+
+
+class CardColor(enum.Enum):
+    """
+    Colors that a card can have.
+
+    Note that this is tied to the database, so changing values here will change
+    values of existing cards.
+    """
+
+    BLUE = 0
+    GREEN = 1
+    RED = 2
+    WHITE = 3
+    YELLOW = 4
+
+
+class Card(db.Model):
+
+    color = db.Column(db.Enum(CardColor), nullable=False)
+    deck_order = db.Column(db.SmallInteger, nullable=False)
+    game_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("game.id"), nullable=False
+    )
+    id = db.Column(UUID(as_uuid=True), default=uuid.uuid4, primary_key=True)
+    number = db.Column(db.SmallInteger, nullable=False)
+
+    game = db.relationship("Game", back_populates="cards")
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "deck_order", "game_id", name="uix_game_card_order"
+        ),
+    )
 
 
 class Game(db.Model):
