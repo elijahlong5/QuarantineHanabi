@@ -100,6 +100,20 @@ class DiscardAction(db.Model):
     card = db.relationship("Card")
 
 
+class DrawAction(db.Model):
+
+    action_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("action.id"), nullable=False
+    )
+    card_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("card.id"), nullable=False
+    )
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
+
+    action = db.relationship("Action")
+    card = db.relationship("Card")
+
+
 class Game(db.Model):
     INITIAL_BOMB_COUNT = 3
 
@@ -163,7 +177,7 @@ class Game(db.Model):
             "discard-pile": [],
             "bomb-count": self.remaining_bomb_count,
             "whose-turn": self.whose_turn(),
-            "cards-in-deck": 0,
+            "cards-in-deck": self.remaining_card_count,
         }
 
     @property
@@ -175,6 +189,18 @@ class Game(db.Model):
         failed_plays = PlayAction.query.filter_by(was_successful=False).count()
 
         return max(0, self.INITIAL_BOMB_COUNT - failed_plays)
+
+    @property
+    def remaining_card_count(self):
+        deck_length = Card.query.filter_by(game=self).count()
+        drawn_card_count = (
+            Card.query.join(DrawAction)
+            .join(Action)
+            .filter(Action.game == self)
+            .count()
+        )
+
+        return deck_length - drawn_card_count
 
     def whose_turn(self):
         """
