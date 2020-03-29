@@ -22,6 +22,31 @@ def env_list(name, delimiter=","):
     return raw_value.split(delimiter)
 
 
+def get_db_config():
+    host = os.getenv("DB_HOST", None)
+    port = os.getenv("DB_PORT", 5432)
+
+    user = os.getenv("DB_USER", "postgres")
+    password = os.getenv("DB_PASSWORD", "")
+
+    database = os.getenv("DB_NAME", "postgres")
+
+    if host:
+        return {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "HOST": host,
+            "NAME": database,
+            "PASSWORD": password,
+            "PORT": port,
+            "USER": user,
+        }
+
+    return {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+    }
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -86,12 +111,7 @@ WSGI_APPLICATION = "hanabi.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
-}
+DATABASES = {"default": get_db_config()}
 
 
 # Password validation

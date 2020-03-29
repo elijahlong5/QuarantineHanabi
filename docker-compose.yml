@@ -18,10 +18,7 @@ services:
       target: devserver
     image: hanabi-dev
 
-    entrypoint:
-      - flask
-      - db
-      - upgrade
+    entrypoint: ["hanabi/manage.py", "migrate"]
     environment:
       DB_HOST: postgres
       DB_PASSWORD: password
@@ -39,7 +36,7 @@ services:
       DB_HOST: postgres
       DB_PASSWORD: password
     ports:
-      # Flask defaults to running on port 5000
-      - 5000:5000
+      # Devserver runs on port 8000
+      - 8000:8000
     volumes:
       - ./:/opt/hanabi
