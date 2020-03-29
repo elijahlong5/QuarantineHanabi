@@ -73,3 +73,27 @@ class DiscardAction(models.Model):
         order_with_respect_to = "action"
         verbose_name = _("discard action")
         verbose_name_plural = _("discard actions")
+
+
+class DrawAction(models.Model):
+
+    action = models.OneToOneField(
+        "Action",
+        on_delete=models.CASCADE,
+        related_name="draw_action",
+        verbose_name=_("action"),
+    )
+    card = models.ForeignKey(
+        "Card",
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name=_("card"),
+    )
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+
+    class Meta:
+        order_with_respect_to = "action"
+        verbose_name = _("draw action")
+        verbose_name_plural = _("draw actions")
