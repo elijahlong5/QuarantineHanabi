@@ -324,3 +324,39 @@ class Player(db.Model):
             "lobby_id", "order", name="uix_lobby_player_order"
         ),
     )
+
+
+class SetPlayerHandAction(db.Model):
+
+    action_id = db.Column(
+        UUID(as_uuid=True), db.ForeignKey("action.id"), nullable=False
+    )
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
+
+    action = db.relationship("Action")
+    player_cards = db.relationship(
+        "SetPlayerHandActionCard", back_populates="card"
+    )
+
+
+class SetPlayerHandActionCard(db.Model):
+
+    card_id = db.Column(UUID(as_uuid=True), db.ForeignKey("card.id"))
+    id = db.Column(UUID(as_uuid=True), primary_key=True)
+    order = db.Column(db.SmallInteger, nullable=False)
+    set_hand_action_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("set_player_hand_action.id"),
+        nullable=False,
+    )
+
+    card = db.relationship("Card")
+    set_hand_action = db.relationship(
+        "SetPlayerHandAction", back_populates="player_cards"
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "order", "set_hand_action_id", name="uix_player_hand_order"
+        ),
+    )
