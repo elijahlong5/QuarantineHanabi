@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from game import views
 
-urlpatterns = [path("", views.main)]
+urlpatterns = [path("api/", include("game.api.urls")), path("", views.main)]

@@ -1,6 +1,9 @@
 black==19.10b0
 django==3.0.4
+djangorestframework==3.11.0
 flake8==3.7.9
 pre-commit==2.2.0
 psycopg2-binary==2.8.4
 pytest==5.4.1
+pytest-django==3.8.0
+requests==2.23.0
