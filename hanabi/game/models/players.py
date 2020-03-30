@@ -46,3 +46,52 @@ class Player(models.Model):
             return self.lobby_member.name
 
         return ugettext("Player %d") % (self.order + 1)
+
+
+class PlayerHand(models.Model):
+
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+    player = models.ForeignKey(
+        "Player",
+        on_delete=models.CASCADE,
+        related_name="hands",
+        related_query_name="hand",
+        verbose_name=_("player"),
+    )
+    source_action = models.OneToOneField(
+        "Action",
+        on_delete=models.CASCADE,
+        related_name="resulting_hand",
+        verbose_name=_("source action"),
+    )
+
+    class Meta:
+        verbose_name = _("player hand")
+        verbose_name_plural = _("player hands")
+
+
+class PlayerHandCard(models.Model):
+
+    card = models.ForeignKey(
+        "Card",
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name=_("card"),
+    )
+    hand = models.ForeignKey(
+        "PlayerHand",
+        on_delete=models.CASCADE,
+        related_name="cards",
+        related_query_name="card",
+        verbose_name=_("hand"),
+    )
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+
+    class Meta:
+        order_with_respect_to = "hand"
+        verbose_name = _("player hand card")
+        verbose_name_plural = _("player hand cards")
