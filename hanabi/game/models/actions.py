@@ -1,7 +1,10 @@
 import uuid
 
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
+
+from .cards import Card
 
 
 class Action(models.Model):
@@ -97,3 +100,71 @@ class DrawAction(models.Model):
         order_with_respect_to = "action"
         verbose_name = _("draw action")
         verbose_name_plural = _("draw actions")
+
+
+class HintAction(models.Model):
+
+    COLOR_CHOICES = (
+        (Card.BLUE, _("Blue")),
+        (Card.GREEN, _("Green")),
+        (Card.RAINBOW, _("Rainbow")),
+        (Card.RED, _("Red")),
+        (Card.WHITE, _("White")),
+        (Card.YELLOW, _("Yellow")),
+    )
+
+    action = models.OneToOneField(
+        "Action",
+        on_delete=models.CASCADE,
+        related_name="hint_action",
+        verbose_name=_("action"),
+    )
+    color = models.PositiveSmallIntegerField(
+        choices=COLOR_CHOICES, null=True, verbose_name=_("color")
+    )
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+    number = models.PositiveSmallIntegerField(
+        null=True, verbose_name=_("number")
+    )
+
+    class Meta:
+        constraints = (
+            models.CheckConstraint(
+                check=Q(
+                    (Q(color__isnull=False) & Q(number__isnull=True))
+                    | (Q(color__isnull=True) & Q(number__isnull=False))
+                ),
+                name="cix_color_xor_number",
+            ),
+        )
+        order_with_respect_to = "action"
+        verbose_name = _("hint action")
+        verbose_name_plural = _("hint actions")
+
+
+class HintCard(models.Model):
+
+    card = models.ForeignKey(
+        "Card",
+        on_delete=models.CASCADE,
+        related_name="hint_cards",
+        related_query_name="hint_card",
+        verbose_name=_("card"),
+    )
+    hint = models.ForeignKey(
+        "HintAction",
+        on_delete=models.CASCADE,
+        related_name="cards",
+        related_query_name="card",
+        verbose_name=_("hint"),
+    )
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+
+    class Meta:
+        unique_together = ("card", "hint")
+        verbose_name = _("hint card")
+        verbose_name_plural = _("hint cards")
