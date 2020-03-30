@@ -33,6 +33,7 @@ services:
     image: hanabi-dev
 
     environment:
+      ALLOWED_HOSTS: 0.0.0.0
       DB_HOST: postgres
       DB_PASSWORD: password
     ports:
