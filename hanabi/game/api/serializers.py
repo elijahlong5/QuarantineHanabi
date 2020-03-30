@@ -15,3 +15,4 @@ class LobbySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("code", "id", "members")
         model = models.Lobby
+        read_only_fields = ("code", "id")
