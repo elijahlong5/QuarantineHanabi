@@ -168,3 +168,28 @@ class HintCard(models.Model):
         unique_together = ("card", "hint")
         verbose_name = _("hint card")
         verbose_name_plural = _("hint cards")
+
+
+class PlayAction(models.Model):
+
+    action = models.OneToOneField(
+        "Action",
+        on_delete=models.CASCADE,
+        related_name="play_action",
+        verbose_name=_("action"),
+    )
+    card = models.OneToOneField(
+        "Card",
+        on_delete=models.CASCADE,
+        related_name="play_action",
+        verbose_name=_("card"),
+    )
+    id = models.UUIDField(
+        default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
+    )
+    was_successful = models.BooleanField(verbose_name=_("was successful"))
+
+    class Meta:
+        order_with_respect_to = "action"
+        verbose_name = _("play action")
+        verbose_name_plural = _("play actions")

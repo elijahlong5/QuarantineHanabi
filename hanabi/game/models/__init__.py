@@ -1,4 +1,11 @@
-from .actions import Action, DiscardAction, DrawAction, HintAction, HintCard
+from .actions import (
+    Action,
+    DiscardAction,
+    DrawAction,
+    HintAction,
+    HintCard,
+    PlayAction,
+)
 from .cards import Card
 from .games import Game
 from .lobbies import Lobby, LobbyMember
@@ -15,5 +22,6 @@ __all__ = [
     "HintCard",
     "Lobby",
     "LobbyMember",
+    "PlayAction",
     "Player",
 ]
