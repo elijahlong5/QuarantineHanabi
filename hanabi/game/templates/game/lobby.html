@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "game/base.html" %}
 {% block content %}
     <div>
         <h2>
@@ -20,7 +20,6 @@
 {% endblock content %}
 
 {% block scripts %}
-    <script src="{{ url_for('static', filename='scripts/lobby-players.js') }}"></script>
     <script>
         $(document).ready(function() {
             const urlParts = window.location.pathname.split("/");

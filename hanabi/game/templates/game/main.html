@@ -1,10 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Hanabi Online</title>
-</head>
-<body>
-    Hello World!
-</body>
-</html>
+{% extends "game/base.html" %}
+{% block content %}
+    <div class="container">
+        <section class="call-to-action">
+            <h1>Hanabi Online</h1>
+        </section>
+
+        <section class="text-center mb-5" id="create-lobby">
+            <h2>Create a Lobby</h2>
+            <p class="lead mb-4">
+                Create a new lobby for between one and four other players to join.
+            </p>
+
+            <form action="" method="post" >
+                {% csrf_token %}
+
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-6 col-sm-4 form-group">
+
+                    </div>
+                </div>
+
+                <button class="btn btn-primary text-center" type="submit">
+                    Create Lobby
+                </button>
+            </form>
+        </section>
+
+        <section class="mb-5" id="join-lobby">
+            <h2 class="text-center">Join a Lobby</h2>
+            <p class="text-center lead mb-4">
+                Join a lobby that has already been created.
+            </p>
+
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col form-group">
+
+                    </div>
+
+                    <div class="col form-group">
+
+                    </div>
+                </div>
+
+                <button class="btn btn-primary d-block ml-auto mr-auto" type="submit">
+                    Join Lobby
+                </button>
+            </form>
+        </section>
+    </div>
+{% endblock content %}

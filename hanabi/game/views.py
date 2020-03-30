@@ -5,8 +5,12 @@ from django.shortcuts import render
 
 
 def main(request):
-    print()
     return render(request, "game/main.html")
-    # return HttpResponse(
-    #     loader.get_template("templates/main.html").render({}, request)
-    # )
+
+
+def lobby(request):
+    return render(request, "game/lobby.html")
+
+
+def game_in_session(request):
+    return render(request, "game/game-in-session.html")
