@@ -1,22 +1,18 @@
 const PLAYER_LIST_UPDATE_INTERVAL_MILLIS  = 5000;
 const GAME_STATE_UPDATE_MILLIS = 5000;
 
-function fetchPlayerInfo(accessToken) {
-    let foo = "bar";
-    return fetch("/api/lobby/" + accessToken + "/")
+function fetchPlayerInfo(accessCode) {
+    return fetch("/api/lobbies/"+accessCode+"/members/")
         .then(function (response) {
             return response.json();
-        })
-        .then(function (data) {
-            return data.players;
         });
 }
 
 function updatePlayerList(playerListContainer, players) {
     const playerList = $("<ul />");
-    for (const player in players) {
+    for (const player of players) {
         const playerListItem = $("<li />");
-        playerListItem.text(player);
+        playerListItem.text(player["name"]);
 
         playerList.append(playerListItem);
     }
@@ -25,21 +21,20 @@ function updatePlayerList(playerListContainer, players) {
     playerListContainer.append(playerList);
 }
 
-function pollPlayerList(accessToken, playerListContainer) {
-    fetchPlayerInfo(accessToken)
+function pollPlayerList(accessCode, playerListContainer) {
+    fetchPlayerInfo(accessCode)
         .then(updatePlayerList.bind(this, playerListContainer))
         .then(function () {
             setTimeout(
-                pollPlayerList.bind(this, accessToken, playerListContainer),
+                pollPlayerList.bind(this, accessCode, playerListContainer),
                 PLAYER_LIST_UPDATE_INTERVAL_MILLIS
             );
         }.bind(this));
 }
 
-function startPollingPlayerList(accessToken, playerListSelector) {
+function startPollingPlayerList(accessCode, playerListSelector) {
     const playerListContainer = $(playerListSelector);
-
-    pollPlayerList(accessToken, playerListContainer);
+    pollPlayerList(accessCode, playerListContainer);
 }
 
 async function fetchIsGameOn(accessToken) {
