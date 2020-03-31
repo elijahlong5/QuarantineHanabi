@@ -2,7 +2,7 @@ const PLAYER_LIST_UPDATE_INTERVAL_MILLIS  = 5000;
 const GAME_STATE_UPDATE_MILLIS = 5000;
 
 function fetchPlayerInfo(accessCode) {
-    return fetch("/get-lobby-members/"+accessCode+"/")
+    return fetch("/api/lobbies/"+accessCode+"/members/")
         .then(function (response) {
             return response.json();
         });
@@ -10,9 +10,9 @@ function fetchPlayerInfo(accessCode) {
 
 function updatePlayerList(playerListContainer, players) {
     const playerList = $("<ul />");
-    for (const player in players) {
+    for (const player of players) {
         const playerListItem = $("<li />");
-        playerListItem.text(players[player]["name"]);
+        playerListItem.text(player["name"]);
 
         playerList.append(playerListItem);
     }

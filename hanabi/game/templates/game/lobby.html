@@ -6,11 +6,12 @@
             You are in a lobby. Access code is {{ access_code }}
         </h2>
         <form action="/start-game/" method="post">
+            {% csrf_token %}
             <button class="button" type="submit" id="start-game-button">
                 Start Game
             </button>
             <input type="hidden" value="{{ access_code }}" name="access_code">
-            <input type="hidden" value="{{ player_id }}" name="player_id">
+            <input type="hidden" value="{{ lobby_member }}" name="lobby_member_name">
         </form>
     </div>
 

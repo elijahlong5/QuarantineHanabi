@@ -1,5 +1,4 @@
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from game.forms import CreateLobbyForm, JoinLobbyForm
 from game import models
 
@@ -20,7 +19,7 @@ def lobby(request, access_code, lobby_member):
     )
 
 
-def game_in_session(request):
+def game_in_session(request, code, player):
     return render(request, "game/game-in-session.html")
 
 
@@ -44,9 +43,11 @@ def join_lobby(request):
     return redirect("/")
 
 
-def get_lobby_members(request, code):
-    lobby = models.Lobby.objects.get(code=code)
-    lobby_members = models.LobbyMember.objects.filter(lobby=lobby).values(
-        "name"
-    )
-    return JsonResponse(list(lobby_members), safe=False)
+def start_game(request):
+    if request.method == "POST":
+        code = request.POST.get("access_code")
+        player_name = request.POST.get("lobby_member_name")
+        lobby = get_object_or_404(models.Lobby, code=code)
+        if not models.Game.objects.filter(lobby=lobby).exists():
+            models.Game.create_from_lobby(lobby)
+        return redirect(f"/game-in-session/{lobby.code}/{player_name}/")
