@@ -3,10 +3,10 @@ from game import views
 
 
 urlpatterns = [
-  path("api/", include("game.api.urls")),  
-  path("", views.main),
+    path("api/", include("game.api.urls")),
+    path("", views.main),
     path("lobby/<access_code>/<lobby_member>/", views.lobby),
     path("create-lobby/", views.create_lobby),
     path("join-lobby/", views.join_lobby),
+    path("get-lobby-members/<code>/", views.get_lobby_members),
 ]
-

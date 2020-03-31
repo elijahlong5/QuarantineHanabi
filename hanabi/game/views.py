@@ -1,5 +1,7 @@
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from game.forms import CreateLobbyForm, JoinLobbyForm
+from game import models
 
 
 def main(request):
@@ -40,3 +42,11 @@ def join_lobby(request):
             url = f"/lobby/{lobby_member.lobby.code}/{lobby_member.name}/"
             return redirect(url)
     return redirect("/")
+
+
+def get_lobby_members(request, code):
+    lobby = models.Lobby.objects.get(code=code)
+    lobby_members = models.LobbyMember.objects.filter(lobby=lobby).values(
+        "name"
+    )
+    return JsonResponse(list(lobby_members), safe=False)

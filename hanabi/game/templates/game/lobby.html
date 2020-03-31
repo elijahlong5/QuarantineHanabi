@@ -22,4 +22,7 @@
 
 {% block scripts %}
     <script src="{% static 'game/scripts/lobby.js' %}"></script>
+    <script>
+        startPollingPlayerList("{{ access_code }}", "#player-list");
+    </script>
 {% endblock %}
