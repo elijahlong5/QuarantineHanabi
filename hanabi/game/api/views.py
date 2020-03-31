@@ -5,6 +5,14 @@ from game import models
 from game.api import serializers
 
 
+class GameListCreateView(generics.CreateAPIView):
+    serializer_class = serializers.GameSerializer
+
+    def perform_create(self, serializer):
+        lobby = get_object_or_404(models.Lobby, code=self.kwargs.get("code"))
+        serializer.save(lobby=lobby)
+
+
 class LobbyCreateView(generics.CreateAPIView):
     serializer_class = serializers.LobbySerializer
 

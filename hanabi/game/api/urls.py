@@ -10,4 +10,9 @@ urlpatterns = [
         views.LobbyMemberListCreateView.as_view(),
         name="lobby-member-list",
     ),
+    path(
+        "lobbies/<code>/games/",
+        views.GameListCreateView.as_view(),
+        name="game-list",
+    ),
 ]
