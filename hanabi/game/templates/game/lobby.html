@@ -1,4 +1,5 @@
 {% extends "game/base.html" %}
+{% load static %}
 {% block content %}
     <div>
         <h2>
@@ -17,21 +18,8 @@
         <h2>Players</h2>
         <div id="player-list"></div>
     </section>
-{% endblock content %}
-
-{% block scripts %}
-    <script>
-        $(document).ready(function() {
-            const urlParts = window.location.pathname.split("/");
-            const accessToken = urlParts[2];
-            const playerId = urlParts[4];
-
-            {#startPollingPlayerList(accessToken, "#player-list");#}
-            {#pollGameState(accessToken, playerId);#}
-        });
-    </script>
 {% endblock %}
 
 {% block scripts %}
     <script src="{% static 'game/scripts/lobby.js' %}"></script>
-{% endblock scripts %}
+{% endblock %}

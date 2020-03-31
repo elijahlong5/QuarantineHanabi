@@ -1,4 +1,5 @@
 {% extends "game/base.html" %}
+{% load static %}
 {% block styling %}
     <link href="/static/styles/game-in-session.css" rel="stylesheet">
 {% endblock styling %}
@@ -13,6 +14,7 @@
     </div>
 {% endblock content %}
 {% block scripts %}
+    <script src="{% static 'game/scripts/game-in-session.js' %}"></script>
     <script>
         $(document).ready(function() {
             const urlParts = window.location.pathname.split("/");
@@ -22,8 +24,4 @@
             {#initiateDisplay(accessToken, playerId);#}
         });
     </script>
-{% endblock scripts %}
-
-{% block scripts %}
-    <script src="{% static 'game/scripts/game-in-session.js' %}"></script>
 {% endblock scripts %}

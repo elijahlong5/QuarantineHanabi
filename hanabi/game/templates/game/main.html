@@ -13,12 +13,12 @@
                 Create a new lobby for between one and four other players to join.
             </p>
 
-            <form action="" method="post" >
+            <form action="/create-lobby/" method="post" >
                 {% csrf_token %}
 
                 <div class="row justify-content-center">
                     <div class="col-12 col-md-6 col-sm-4 form-group">
-
+                        {{ create_lobby_form }}
                     </div>
                 </div>
 
@@ -34,16 +34,10 @@
                 Join a lobby that has already been created.
             </p>
 
-            <form action="" method="post">
+            <form action="/join-lobby/" method="post">
                 {% csrf_token %}
                 <div class="row">
-                    <div class="col form-group">
-
-                    </div>
-
-                    <div class="col form-group">
-
-                    </div>
+                    {{ join_lobby_form }}
                 </div>
 
                 <button class="btn btn-primary d-block ml-auto mr-auto" type="submit">
