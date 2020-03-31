@@ -37,6 +37,7 @@ class Player(models.Model):
 
     class Meta:
         ordering = ("created_at",)
+        unique_together = ("game", "order")
         verbose_name = _("player")
         verbose_name_plural = _("players")
 
