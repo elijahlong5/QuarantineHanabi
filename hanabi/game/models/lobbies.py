@@ -82,5 +82,6 @@ class LobbyMember(models.Model):
 
     class Meta:
         ordering = ("created_at",)
+        unique_together = ("lobby", "name")
         verbose_name = _("lobby member")
         verbose_name_plural = _("lobby members")
