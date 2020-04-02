@@ -13,7 +13,7 @@ class LobbySerializer(serializers.ModelSerializer):
     members = LobbyMemberSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = ("code", "id", "members")
+        fields = ("code", "id", "members", "has_active_game")
         model = models.Lobby
         read_only_fields = ("code", "id")
 

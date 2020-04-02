@@ -9,6 +9,9 @@ urlpatterns = [
     ),
     path("lobbies/", views.LobbyCreateView.as_view(), name="lobby-list"),
     path(
+        "lobbies/<code>/", views.LobbyDetailView.as_view(), name="detail-view",
+    ),
+    path(
         "lobbies/<code>/members/",
         views.LobbyMemberListCreateView.as_view(),
         name="lobby-member-list",

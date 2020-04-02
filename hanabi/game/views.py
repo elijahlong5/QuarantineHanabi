@@ -21,7 +21,6 @@ def lobby(request, access_code, lobby_member):
 
 def game_in_session(request, access_code, player_name):
     lobby = get_object_or_404(models.Lobby, code=access_code)
-    # lobby = models.Lobby.objects.get(code=access_code)
     game = models.Game.objects.get(lobby=lobby)
     return render(
         request,
