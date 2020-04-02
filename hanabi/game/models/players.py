@@ -67,6 +67,14 @@ class Player(models.Model):
         for card in cards:
             new_hand.cards.create(card=card)
 
+    def remove_card(self, card, source_action):
+        cards = self.cards
+        cards.remove(card)
+
+        new_hand = self.hands.create(source_action=source_action)
+        for card in cards:
+            new_hand.cards.create(card=card)
+
 
 class PlayerHand(models.Model):
 

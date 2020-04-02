@@ -6,6 +6,19 @@ from game import models
 from game.api import serializers
 
 
+class ActionListCreateView(generics.CreateAPIView):
+    serializer_class = serializers.ActionSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+
+        context["game"] = get_object_or_404(
+            models.Game, pk=self.kwargs.get("pk")
+        )
+
+        return context
+
+
 class GameDetailView(generics.RetrieveAPIView):
     queryset = models.Game.objects.all()
     serializer_class = serializers.GameStateSerializer

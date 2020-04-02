@@ -120,3 +120,16 @@ class Game(models.Model):
         action = self.actions.create(action_type=Action.DRAW, player=player)
 
         return DrawAction.objects.create(action=action, card=card)
+
+    def is_playable(self, card):
+        if card.number == 1:
+            return not self.actions.filter(
+                play_action__card__color=card.color,
+                play_action__was_successful=True,
+            ).exists()
+
+        return self.actions.filter(
+            play_action__card__color=card.color,
+            play_action__card__number=card.number - 1,
+            play_action__was_successful=True,
+        ).exists()
