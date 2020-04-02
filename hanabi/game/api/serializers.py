@@ -39,10 +39,14 @@ class GameSerializer(serializers.ModelSerializer):
 
 
 class GameStateSerializer(serializers.ModelSerializer):
+    active_player = serializers.CharField(
+        read_only=True, source="active_player.name"
+    )
     players = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
+            "active_player",
             "id",
             "is_in_progress",
             "players",
@@ -179,6 +183,17 @@ class ActionSerializer(serializers.ModelSerializer):
             action.player.remove_card(card, action)
 
         return action
+
+    def validate(self, attrs):
+        action_type_name = attrs.get("action_type")
+        action_type = self.ACTION_NAME_TO_INTERNAL_REP_MAP[action_type_name]
+        if action_type in models.Action.TURN_ACTION_TYPES:
+            if not self.context["game"].is_players_turn(self._player):
+                raise serializers.ValidationError(
+                    gettext("It is not your turn.")
+                )
+
+        return attrs
 
     def validate_player_name(self, name):
         try:
