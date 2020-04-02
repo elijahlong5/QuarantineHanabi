@@ -18,6 +18,8 @@ class Game(models.Model):
     }
     INITIAL_BOMB_COUNT = 3
 
+    HAND_SIZE = 4
+
     created_at = models.DateTimeField(
         auto_now_add=True, null=False, verbose_name=_("created at")
     )
@@ -75,6 +77,7 @@ class Game(models.Model):
             )
             deck_length = cards_per_color * len(colors)
             deck_order_values = list(range(deck_length))
+            random.shuffle(deck_order_values)
 
             for color in colors:
                 for number, count in cls.CARD_COUNT_MAP.items():
@@ -84,9 +87,7 @@ class Game(models.Model):
                             deck_order=deck_order_values.pop(),
                             number=number,
                         )
-
             game.deal()
-
         return game
 
     @property

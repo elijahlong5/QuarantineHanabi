@@ -1,7 +1,7 @@
 const GAME_UPDATE_INTERVAL_MILLIS = 5000;
 
-function fetchGameState(accessToken, playerId) {
-    return fetch("/api/get-game-state/" + accessToken + "/" + playerId + "/")
+async function fetchGameState(gameCode, playerName) {
+    return fetch("/api/games/" + gameCode + "/?as_player=" + playerName)
         .then(function(response) {
             return response.json();
         });
@@ -22,19 +22,19 @@ async function fetchPostPlayerMove(playCardDict, accessToken, playerId) {
         redirect: 'follow',
         referrer: 'no-referrer',
         body: JSON.stringify(data)
-    })
+    });
 
-    return await response.json(); //todo:handle the response dict (should repopulate that players hand if the move was a discard
+    return await response.json();
 }
 
 
 
-function initiateDisplay(accessToken, playerId) {
+function initiateDisplay(gameCode) {
     document.getElementById("hands").innerHTML = "";
     document.getElementById("deck").innerHTML = "";
     document.getElementById("bombs").innerHTML = "";
     document.getElementById("piles").innerHTML = "";
-    fetchGameState(accessToken, playerId)
+    fetchGameState(gameCode)
         .then( function (gameState) {
             console.log(gameState);
             let baseLink = "/static/hanabi_deck/";

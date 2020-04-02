@@ -19,6 +19,7 @@ class GameDetailView(generics.RetrieveAPIView):
             serializer.
         """
         context = super().get_serializer_context()
+        print("requesting game state")
 
         player_name = self.request.query_params.get("as_player")
         if player_name is None:
