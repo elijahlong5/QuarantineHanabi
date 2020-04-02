@@ -19,8 +19,19 @@ def lobby(request, access_code, lobby_member):
     )
 
 
-def game_in_session(request, game_code, player_name):
-    return render(request, "game/game-in-session.html")
+def game_in_session(request, access_code, player_name):
+    lobby = get_object_or_404(models.Lobby, code=access_code)
+    # lobby = models.Lobby.objects.get(code=access_code)
+    game = models.Game.objects.get(lobby=lobby)
+    return render(
+        request,
+        "game/game-in-session.html",
+        {
+            "access_code": access_code,
+            "player_name": player_name,
+            "game_code": game.id,
+        },
+    )
 
 
 def create_lobby(request):
@@ -49,7 +60,5 @@ def start_game(request):
         player_name = request.POST.get("lobby_member_name")
         lobby = get_object_or_404(models.Lobby, code=code)
         if not models.Game.objects.filter(lobby=lobby).exists():
-            game = models.Game.create_from_lobby(lobby)
-        else:
-            game = models.Game.objects.get(lobby=lobby)
-        return redirect(f"/game-in-session/{game.id}/{player_name}/")
+            models.Game.create_from_lobby(lobby)
+        return redirect(f"/game-in-session/{lobby.code}/{player_name}/")
