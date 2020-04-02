@@ -4,6 +4,8 @@ import uuid
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from game.models import Game
+
 
 LOBBY_CODE_LENGTH = 5
 
@@ -42,6 +44,10 @@ class Lobby(models.Model):
         ordering = ("created_at",)
         verbose_name = _("lobby")
         verbose_name_plural = _("lobbies")
+
+    @property
+    def has_active_game(self):
+        return Game.objects.filter(lobby=self).exists()
 
 
 class LobbyMember(models.Model):

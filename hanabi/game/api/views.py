@@ -52,6 +52,12 @@ class LobbyCreateView(generics.CreateAPIView):
     serializer_class = serializers.LobbySerializer
 
 
+class LobbyDetailView(generics.RetrieveAPIView):
+    queryset = models.Lobby.objects.all()
+    lookup_field = "code"
+    serializer_class = serializers.LobbySerializer
+
+
 class LobbyMemberListCreateView(generics.ListCreateAPIView):
     serializer_class = serializers.LobbyMemberSerializer
 

@@ -37,23 +37,28 @@ function startPollingPlayerList(accessCode, playerListSelector) {
     pollPlayerList(accessCode, playerListContainer);
 }
 
-async function fetchIsGameOn(accessToken) {
-    return fetch("/api/is-game-on/" + accessToken + "/")
+async function fetchIsGameOn(accessCode) {
+    return fetch("/api/lobbies/" + accessCode + "/")
         .then(function (response) {
             return response.json();
         });
 }
 
-function pollGameState(accessToken, playerId) {
-    fetchIsGameOn(accessToken)
+function pollGameState(accessCode,lobbyMember) {
+    fetchIsGameOn(accessCode)
         .then(function (response) {
-            if (response["status"] === true) {
-                window.location.href = "/game-in-session/"+accessToken+"/player-id/"+playerId+"/";
+            console.log(response);
+            if (response["has_active_game"] === true) {
+                window.location.href = "/game-in-session/"+accessCode+"/"+lobbyMember+"/";
             }
         }).then(function () {
         setTimeout(
-            pollGameState.bind(this, accessToken, playerId),
+            pollGameState.bind(this, accessCode, lobbyMember),
             GAME_STATE_UPDATE_MILLIS
         );
     }.bind(this));
+}
+
+function startPollingGameState(accessCode, lobbyMember) {
+    pollGameState(accessCode, lobbyMember);
 }

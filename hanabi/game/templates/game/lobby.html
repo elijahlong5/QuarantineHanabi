@@ -14,7 +14,6 @@
             <input type="hidden" value="{{ lobby_member }}" name="lobby_member_name">
         </form>
     </div>
-
     <section>
         <h2>Players</h2>
         <div id="player-list"></div>
@@ -24,6 +23,8 @@
 {% block scripts %}
     <script src="{% static 'game/scripts/lobby.js' %}"></script>
     <script>
+        console.log("{{ access_code }}");
+        startPollingGameState("{{ access_code }}", "{{ lobby_member }}");
         startPollingPlayerList("{{ access_code }}", "#player-list");
     </script>
 {% endblock %}
