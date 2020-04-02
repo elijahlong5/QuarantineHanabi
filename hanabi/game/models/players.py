@@ -42,11 +42,30 @@ class Player(models.Model):
         verbose_name_plural = _("players")
 
     @property
+    def cards(self):
+        previous_hand = self.hands.order_by(
+            "-source_action__created_at"
+        ).first()
+
+        if previous_hand:
+            return [card.card for card in previous_hand.cards.all()]
+
+        return []
+
+    @property
     def name(self):
         if self.lobby_member:
             return self.lobby_member.name
 
         return ugettext("Player %d") % (self.order + 1)
+
+    def give_card(self, draw_action):
+        cards = self.cards
+        cards.append(draw_action.card)
+
+        new_hand = self.hands.create(source_action=draw_action.action)
+        for card in cards:
+            new_hand.cards.create(card=card)
 
 
 class PlayerHand(models.Model):
