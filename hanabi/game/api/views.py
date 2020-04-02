@@ -1,8 +1,42 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import generics
+from django.utils.translation import gettext as _
+from rest_framework import generics, serializers as drf_serializers
 
 from game import models
 from game.api import serializers
+
+
+class GameDetailView(generics.RetrieveAPIView):
+    queryset = models.Game.objects.all()
+    serializer_class = serializers.GameStateSerializer
+
+    def get_serializer_context(self):
+        """
+        Associate the requesting player with the serializer.
+
+        Returns:
+            A dictionary containing the context passed to the view's
+            serializer.
+        """
+        context = super().get_serializer_context()
+
+        player_name = self.request.query_params.get("as_player")
+        if player_name is None:
+            raise drf_serializers.ValidationError(
+                {"as_player": _("This field is required.")}
+            )
+
+        game = self.get_object()
+        try:
+            player = game.players.get(lobby_member__name=player_name)
+        except models.Player.DoesNotExist:
+            raise drf_serializers.ValidationError(
+                {"as_player": _("Invalid player name.")}
+            )
+
+        context["for_player"] = player
+
+        return context
 
 
 class GameListCreateView(generics.CreateAPIView):

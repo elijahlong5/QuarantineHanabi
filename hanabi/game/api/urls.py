@@ -4,6 +4,9 @@ from game.api import views
 
 
 urlpatterns = [
+    path(
+        "games/<uuid:pk>/", views.GameDetailView.as_view(), name="game-detail"
+    ),
     path("lobbies/", views.LobbyCreateView.as_view(), name="lobby-list"),
     path(
         "lobbies/<code>/members/",

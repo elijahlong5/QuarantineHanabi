@@ -86,10 +86,10 @@ class DrawAction(models.Model):
         related_name="draw_action",
         verbose_name=_("action"),
     )
-    card = models.ForeignKey(
+    card = models.OneToOneField(
         "Card",
         on_delete=models.CASCADE,
-        related_name="+",
+        related_name="draw_action",
         verbose_name=_("card"),
     )
     id = models.UUIDField(

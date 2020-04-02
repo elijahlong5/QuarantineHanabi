@@ -4,6 +4,7 @@ import uuid
 from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
 
+from .actions import DrawAction, Action
 from .cards import Card
 
 
@@ -15,6 +16,7 @@ class Game(models.Model):
         4: 2,
         5: 1,
     }
+    INITIAL_BOMB_COUNT = 3
 
     created_at = models.DateTimeField(
         auto_now_add=True, null=False, verbose_name=_("created at")
@@ -83,4 +85,37 @@ class Game(models.Model):
                             number=number,
                         )
 
+            game.deal()
+
         return game
+
+    @property
+    def remaining_bombs(self):
+        failed_plays = self.actions.filter(
+            play_action__was_successful=False
+        ).count()
+
+        return max(0, self.INITIAL_BOMB_COUNT - failed_plays)
+
+    @property
+    def remaining_cards(self):
+        deck_size = self.cards.count()
+        drawn_cards = self.actions.filter(draw_action__isnull=False).count()
+
+        return deck_size - drawn_cards
+
+    def deal(self):
+        hand_size = 5 if self.players.count() < 4 else 4
+        for __ in range(hand_size):
+            for player in self.players.order_by("order"):
+                player.give_card(self.draw_card(player))
+
+    def draw_card(self, player):
+        card = (
+            self.cards.filter(draw_action__isnull=True)
+            .order_by("deck_order")
+            .first()
+        )
+        action = self.actions.create(action_type=Action.DRAW, player=player)
+
+        return DrawAction.objects.create(action=action, card=card)
