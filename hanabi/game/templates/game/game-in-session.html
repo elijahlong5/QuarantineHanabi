@@ -18,10 +18,9 @@
     <script>
         $(document).ready(function() {
             const urlParts = window.location.pathname.split("/");
-            {#const accessToken = urlParts[2];#}
-            {#const playerId = urlParts[4];#}
-
-            {#initiateDisplay(accessToken, playerId);#}
+            const accessCode = urlParts[2];
+            const playerName = urlParts[4];
+            {#initiateDisplay(accessCode, playerName);#}
         });
     </script>
 {% endblock scripts %}

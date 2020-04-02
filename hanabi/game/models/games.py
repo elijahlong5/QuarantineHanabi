@@ -5,6 +5,7 @@ from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
 
 from .cards import Card
+from .players import PlayerHand, PlayerHandCard
 
 
 class Game(models.Model):
@@ -15,6 +16,8 @@ class Game(models.Model):
         4: 2,
         5: 1,
     }
+
+    HAND_SIZE = 4
 
     created_at = models.DateTimeField(
         auto_now_add=True, null=False, verbose_name=_("created at")
@@ -41,6 +44,19 @@ class Game(models.Model):
         ordering = ("created_at",)
         verbose_name = _("game")
         verbose_name_plural = _("games")
+
+    def deal(self):
+        deck_length = 50
+        deck_order_values = list(range(deck_length))
+        random.shuffle(deck_order_values)
+        for player in self.players:
+            PlayerHand.create(player=player)
+
+            for i in range(0, Game.HAND_SIZE):
+                PlayerHandCard.create(
+                    card=self.cards.get(deck_order=deck_order_values.pop()),
+                    hand=self.players.get(player),
+                )
 
     @classmethod
     def create_from_lobby(cls, lobby):
@@ -73,6 +89,7 @@ class Game(models.Model):
             )
             deck_length = cards_per_color * len(colors)
             deck_order_values = list(range(deck_length))
+            random.shuffle(deck_order_values)
 
             for color in colors:
                 for number, count in cls.CARD_COUNT_MAP.items():
@@ -82,5 +99,5 @@ class Game(models.Model):
                             deck_order=deck_order_values.pop(),
                             number=number,
                         )
-
+        cls.deal(game)
         return game
