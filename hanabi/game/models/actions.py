@@ -67,10 +67,10 @@ class DiscardAction(models.Model):
         related_name="discard_action",
         verbose_name=_("action"),
     )
-    card = models.ForeignKey(
+    card = models.OneToOneField(
         "Card",
         on_delete=models.CASCADE,
-        related_name="+",
+        related_name="discard_action",
         verbose_name=_("card"),
     )
     id = models.UUIDField(
@@ -124,8 +124,8 @@ class HintAction(models.Model):
         related_name="hint_action",
         verbose_name=_("action"),
     )
-    color = models.PositiveSmallIntegerField(
-        choices=COLOR_CHOICES, null=True, verbose_name=_("color")
+    color = models.CharField(
+        choices=COLOR_CHOICES, max_length=7, verbose_name=_("color"),
     )
     id = models.UUIDField(
         default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
