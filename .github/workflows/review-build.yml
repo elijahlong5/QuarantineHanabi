@@ -31,3 +31,5 @@ jobs:
 
       - name: Test with pytest
         run: pytest hanabi/
+        env:
+          SECRET_KEY: test
