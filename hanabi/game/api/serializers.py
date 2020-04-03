@@ -49,6 +49,7 @@ class GameStateSerializer(serializers.ModelSerializer):
             "active_player",
             "id",
             "is_in_progress",
+            "piles",
             "players",
             "remaining_bombs",
             "remaining_cards",

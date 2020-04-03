@@ -121,6 +121,28 @@ class Game(models.Model):
         return next_players_query.first()
 
     @property
+    def piles(self):
+        """
+        Returns:
+            A dictionary containing a map of color names to the highest
+            played card for each.
+        """
+        piles = {}
+
+        colors = self.cards.values_list("color", flat=True).distinct()
+        for color in colors:
+            last_card = (
+                self.cards.filter(
+                    color=color, play_action__was_successful=True
+                )
+                .order_by("-number")
+                .first()
+            )
+            piles[color] = last_card.number if last_card else 0
+
+        return piles
+
+    @property
     def remaining_bombs(self):
         failed_plays = self.actions.filter(
             play_action__was_successful=False
