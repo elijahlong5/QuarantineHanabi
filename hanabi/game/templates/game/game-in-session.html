@@ -20,6 +20,7 @@
             let playerName = "{{ player_name }}";
             let gameCode = "{{ game_code }}";
             fetchGameState(gameCode, playerName);
+            initiateDisplay(gameCode, playerName);
         });
     </script>
 {% endblock scripts %}
