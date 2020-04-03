@@ -5,12 +5,12 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class Card(models.Model):
-    BLUE = 1
-    GREEN = 2
-    RAINBOW = 3
-    RED = 4
-    WHITE = 5
-    YELLOW = 6
+    BLUE = "BLUE"
+    GREEN = "GREEN"
+    RAINBOW = "RAINBOW"
+    RED = "RED"
+    WHITE = "WHITE"
+    YELLOW = "YELLOW"
 
     COLOR_CHOICES = (
         (BLUE, _("Blue")),
@@ -21,8 +21,8 @@ class Card(models.Model):
         (YELLOW, _("Yellow")),
     )
 
-    color = models.PositiveSmallIntegerField(
-        choices=COLOR_CHOICES, null=False, verbose_name=_("color")
+    color = models.CharField(
+        choices=COLOR_CHOICES, max_length=7, verbose_name=_("color"),
     )
     created_at = models.DateTimeField(
         auto_now_add=True, null=False, verbose_name=_("created at")
