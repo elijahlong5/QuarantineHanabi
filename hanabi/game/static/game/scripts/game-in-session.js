@@ -1,4 +1,13 @@
 const GAME_UPDATE_INTERVAL_MILLIS = 5000;
+const ID_DECK_IMG = 'deck-image';
+const ID_BOMBS = 'bombs-remaining';
+const ID_CARDS_REMAINING = 'cards-remaining';
+const CARD_ID_SUFFIX = "s-cards"; // playerName + suffix
+
+const LINK_BASE_CARD = "/static/hanabi_deck/";
+const LINK_CARD_BACK = LINK_BASE_CARD + "card_back.png";
+
+let prevGameState = {};
 
 async function fetchGameState(gameCode, playerName) {
     return fetch("/api/games/" + gameCode + "/?as_player=" + playerName)
@@ -27,40 +36,16 @@ async function fetchPostPlayerMove(playCardDict, accessToken, playerId) {
     return await response.json();
 }
 
-function numberToColor(num) {
-    let color = "";
-    switch (num) {
-        case 1:
-            color = "Blue";
-            break;
-        case 2:
-            color = "Green";
-            break;
-        case 3:
-            color = "Rainbow";
-            break;
-        case 4:
-            color = "Red";
-            break;
-        case 5:
-            color = "White";
-            break;
-        case 6:
-            color = "Yellow";
-            break;
-        default:
-            color = "Yellow";
-    }
-    return color
-}
 
 function initiateDisplay(gameCode, playerName) {
-    pollGameState(gameCode, playerName);
+    fetchGameState(gameCode, playerName)
+        .then(populateDisplay.bind(this))
+        .then(pollGameState.bind(this, gameCode, playerName));
 }
 
 function pollGameState(gameCode, playerName) {
     fetchGameState(gameCode, playerName)
-        .then(populateDisplay.bind(this))
+        .then(updateDisplay.bind(this))
         .then( function() {
            setTimeout(
              pollGameState.bind(this, gameCode, playerName),
@@ -71,18 +56,15 @@ function pollGameState(gameCode, playerName) {
 
 
 function populateDisplay( gameState ) {
-    document.getElementById("hands").innerHTML = "";
-    document.getElementById("deck").innerHTML = "";
-    document.getElementById("bombs").innerHTML = "";
-    document.getElementById("piles").innerHTML = "";
-
+    // game state elements
     let remainingBombs = gameState["remaining_bombs"];
     let remainingCards = gameState["remaining_cards"];
     let players = gameState["players"];
 
-    let baseLink = "/static/hanabi_deck/";
-    let cardBackLink = baseLink + "card_back.png";
-
+    document.getElementById("hands").innerHTML = "";
+    document.getElementById("deck").innerHTML = "";
+    document.getElementById("bombs").innerHTML = "";
+    document.getElementById("piles").innerHTML = "";
     // Display players' hands
     for (let p in players) {
         let curPlayerName = players[p]["name"];
@@ -99,41 +81,105 @@ function populateDisplay( gameState ) {
         playerDiv.appendChild(playerHeader);
 
         let cardsDiv = document.createElement("div");
+        cardsDiv.id = curPlayerName + CARD_ID_SUFFIX;
         cardsDiv.classList.add("cards-container");
         playerDiv.appendChild(cardsDiv);
 
-
-        for (let card in playerCards) {
-            let link = cardBackLink;
-            let cardOrder = card;
-            if ("color" in playerCards[card]) {
-                let color = numberToColor(playerCards[card]["color"]);
-                let rank = playerCards[card]["number"];
-                link = baseLink+color+"_"+rank+".png";
-            }
-
-            let curImg = document.createElement("img");
-            curImg.src = link;
-            cardsDiv.appendChild(curImg);
-            curImg.addEventListener("click", function() {
-                event.preventDefault();
-                console.log("Card " + cardOrder + " was clicked!");
-            });
-        }
+        manageHandDisplay(cardsDiv, playerCards);
     }
 
     // Display deck.
     let deckImg = document.createElement("img");
+    deckImg.id = ID_DECK_IMG;
     deckImg.classList.add("card");
-    deckImg.src = cardBackLink;
+    deckImg.src = LINK_CARD_BACK;
     $("#deck").append(deckImg);
     let deckCount = document.createElement("h3");
+    deckCount.id = ID_CARDS_REMAINING;
     deckCount.innerHTML = "Remaining:</br>" + remainingCards;
     deckCount.classList.add("centered");
     $("#deck").append(deckCount);
 
     // Display Bomb Count.
     let bombCountTitle = document.createElement("h3");
+    bombCountTitle.id = ID_BOMBS;
     bombCountTitle.innerText = "Bombs remaining: " + remainingBombs;
     $("#bombs").append(bombCountTitle);
+
+    prevGameState = gameState;
+}
+
+function manageHandDisplay(cardsDiv, playerCards) {
+    let activeIdList = [];
+
+    let childCardIds = [];
+    if ( cardsDiv.children ) {
+        Array.from(cardsDiv.children).forEach(element => {
+            if (element.id !== undefined) {
+                childCardIds.push(element.id);
+            }
+        });
+    }
+
+    for (let card in playerCards) {
+        let cardOrder = card;
+        let cardId = playerCards[card]["id"];
+
+        activeIdList.push(cardId);
+
+        if (!(childCardIds.indexOf(cardId) >= 0) && cardId !== undefined) {
+            console.log('showing new card: '+ cardId);
+            let curImg = document.createElement("img");
+            curImg.id = cardId;
+            curImg.src = genCardLink(playerCards[card]);
+            cardsDiv.appendChild(curImg);
+            curImg.addEventListener("click", function () {
+                event.preventDefault();
+                console.log("Card " + cardOrder + " was clicked!");
+            });
+        }
+    }
+
+    for( let i of activeIdList){
+        if (childCardIds.indexOf(i) !== -1) {
+            childCardIds.splice(childCardIds.indexOf(i), 1);
+        }
+    }
+    childCardIds.forEach(id => {
+       cardsDiv.removeChild(document.getElementById(id));
+    });
+}
+
+function genCardLink(card) {
+    let link = LINK_CARD_BACK;
+
+    if ("color" in card) {
+        let color = card["color"];
+        let rank = card["number"];
+        link = LINK_BASE_CARD + color + "_" + rank + ".png";
+    }
+    return link;
+}
+
+function updateDisplay(gameState) {
+    console.log(gameState);
+    let remainingBombs = gameState["remaining_bombs"];
+    let remainingCards = gameState["remaining_cards"];
+    let players = gameState["players"];
+    let bombCount = document.getElementById(ID_BOMBS);
+    let deckCount = document.getElementById(ID_CARDS_REMAINING);
+
+    bombCount.innerText = "Bombs remaining: " + remainingBombs;
+    deckCount.innerHTML = "Remaining:</br>" + remainingCards;
+
+    for (let p in players) {
+        let curP = players[p];
+        let curPlayerName = players[p]["name"];
+        let playerCards = players[p]["cards"];
+        let playerOrder = players[p]["order"];
+
+        let cardsDivId = curPlayerName + CARD_ID_SUFFIX;
+        let cardsDiv = document.getElementById(cardsDivId);
+        manageHandDisplay(cardsDiv, playerCards);
+    }
 }
