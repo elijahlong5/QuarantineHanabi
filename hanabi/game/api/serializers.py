@@ -193,6 +193,17 @@ class ActionSerializer(serializers.ModelSerializer):
                     gettext("It is not your turn.")
                 )
 
+            if action_type == models.Action.PLAY:
+                play_action = attrs.get("play_action", {})
+                card = play_action.get("card_id")
+
+                if card not in self._player.cards:
+                    raise serializers.ValidationError(
+                        gettext(
+                            "The specified card does not exist in your hand."
+                        )
+                    )
+
         return attrs
 
     def validate_player_name(self, name):
