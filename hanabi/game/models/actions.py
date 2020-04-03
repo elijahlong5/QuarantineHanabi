@@ -67,10 +67,10 @@ class DiscardAction(models.Model):
         related_name="discard_action",
         verbose_name=_("action"),
     )
-    card = models.ForeignKey(
+    card = models.OneToOneField(
         "Card",
         on_delete=models.CASCADE,
-        related_name="+",
+        related_name="discard_action",
         verbose_name=_("card"),
     )
     id = models.UUIDField(

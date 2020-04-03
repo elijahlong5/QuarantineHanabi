@@ -2,6 +2,7 @@ import random
 import uuid
 
 from django.db import models, transaction
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from .actions import DrawAction, Action
@@ -119,6 +120,18 @@ class Game(models.Model):
         # If we are somewhere in the middle of the player order, return
         # the player with next-highest order.
         return next_players_query.first()
+
+    @property
+    def discards(self):
+        """
+        Returns:
+            The cards that have been discarded during the game either
+            through intentional discards or failed plays.
+        """
+        return self.cards.filter(
+            Q(discard_action__isnull=False)
+            | Q(play_action__was_successful=False)
+        )
 
     @property
     def piles(self):

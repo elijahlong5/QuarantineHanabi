@@ -38,41 +38,6 @@ class GameSerializer(serializers.ModelSerializer):
         return models.Game.create_from_lobby(**validated_data)
 
 
-class GameStateSerializer(serializers.ModelSerializer):
-    active_player = serializers.CharField(
-        read_only=True, source="active_player.name"
-    )
-    players = serializers.SerializerMethodField()
-
-    class Meta:
-        fields = (
-            "active_player",
-            "id",
-            "is_in_progress",
-            "piles",
-            "players",
-            "remaining_bombs",
-            "remaining_cards",
-        )
-        model = models.Game
-        read_only_fields = fields
-
-    def get_players(self, game):
-        for_player = self.context["for_player"]
-
-        player_reps = []
-        for player in game.players.order_by("order"):
-            if player == for_player:
-                serializer = GameStateOwnPlayerSerializer(instance=player)
-            else:
-                serializer = GameStatePlayerSerializer(instance=player)
-
-            rep = serializer.data
-            player_reps.append(rep)
-
-        return player_reps
-
-
 class GameStateCardSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("color", "id", "number")
@@ -103,6 +68,43 @@ class GameStateOwnPlayerSerializer(serializers.ModelSerializer):
         fields = ("id", "cards", "name", "order")
         model = models.Player
         read_only_fields = fields
+
+
+class GameStateSerializer(serializers.ModelSerializer):
+    active_player = serializers.CharField(
+        read_only=True, source="active_player.name"
+    )
+    discards = GameStateCardSerializer(many=True, read_only=True)
+    players = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = (
+            "active_player",
+            "discards",
+            "id",
+            "is_in_progress",
+            "piles",
+            "players",
+            "remaining_bombs",
+            "remaining_cards",
+        )
+        model = models.Game
+        read_only_fields = fields
+
+    def get_players(self, game):
+        for_player = self.context["for_player"]
+
+        player_reps = []
+        for player in game.players.order_by("order"):
+            if player == for_player:
+                serializer = GameStateOwnPlayerSerializer(instance=player)
+            else:
+                serializer = GameStatePlayerSerializer(instance=player)
+
+            rep = serializer.data
+            player_reps.append(rep)
+
+        return player_reps
 
 
 class PlayActionSerializer(serializers.ModelSerializer):
