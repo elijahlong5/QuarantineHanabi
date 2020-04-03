@@ -14,6 +14,11 @@ class Action(models.Model):
     ORDER_HAND = 4
     PLAY = 5
 
+    TURN_ACTION_TYPES = (DISCARD, HINT, PLAY)
+    """
+    The action types that cause a player's turn to be over.
+    """
+
     TYPE_CHOICES = (
         (DISCARD, _("Discard")),
         (DRAW, _("Draw")),

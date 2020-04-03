@@ -7,6 +7,11 @@ urlpatterns = [
     path(
         "games/<uuid:pk>/", views.GameDetailView.as_view(), name="game-detail"
     ),
+    path(
+        "games/<uuid:pk>/actions/",
+        views.ActionListCreateView.as_view(),
+        name="action-list",
+    ),
     path("lobbies/", views.LobbyCreateView.as_view(), name="lobby-list"),
     path(
         "lobbies/<code>/", views.LobbyDetailView.as_view(), name="detail-view",

@@ -91,6 +91,36 @@ class Game(models.Model):
         return game
 
     @property
+    def active_player(self):
+        """
+        Returns:
+            The player that the game is waiting for a move from.
+        """
+        last_play = (
+            self.actions.filter(action_type__in=Action.TURN_ACTION_TYPES)
+            .order_by("-created_at")
+            .first()
+        )
+        ordered_players_query = self.players.order_by("order")
+
+        # If no turn-taking plays have happened yet, it is the first
+        # player's turn.
+        if not last_play:
+            return ordered_players_query.first()
+
+        # If there is no player whose turn comes after the previous
+        # player, then the game has wrapped back to the first player.
+        next_players_query = ordered_players_query.filter(
+            order__gt=last_play.player.order
+        )
+        if not next_players_query.exists():
+            return ordered_players_query.first
+
+        # If we are somewhere in the middle of the player order, return
+        # the player with next-highest order.
+        return next_players_query.first()
+
+    @property
     def remaining_bombs(self):
         failed_plays = self.actions.filter(
             play_action__was_successful=False
@@ -120,3 +150,30 @@ class Game(models.Model):
         action = self.actions.create(action_type=Action.DRAW, player=player)
 
         return DrawAction.objects.create(action=action, card=card)
+
+    def is_playable(self, card):
+        if card.number == 1:
+            return not self.actions.filter(
+                play_action__card__color=card.color,
+                play_action__was_successful=True,
+            ).exists()
+
+        return self.actions.filter(
+            play_action__card__color=card.color,
+            play_action__card__number=card.number - 1,
+            play_action__was_successful=True,
+        ).exists()
+
+    def is_players_turn(self, player):
+        """
+        Determine if it is a specific player's turn.
+
+        Args:
+            player:
+                The player to compare to the active player.
+
+        Returns:
+            A boolean indicating if it is the provided player's turn.
+        """
+
+        return player == self.active_player

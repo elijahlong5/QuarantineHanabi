@@ -46,6 +46,7 @@ def test_get_game_with_valid_player_should_return_game_state(live_server):
     assert game_state["is_in_progress"]
 
     # Ensure game looks like a new game.
+    assert game_state["active_player"] == game.players.first().name
     assert game_state["remaining_bombs"] == 3
     assert game_state["remaining_cards"] == 40  # Each dealt 5 cards
 
