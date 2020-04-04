@@ -247,7 +247,23 @@ class ActionSerializer(serializers.ModelSerializer):
                     gettext("It is not your turn.")
                 )
 
-            if action_type == models.Action.PLAY:
+            if action_type == models.Action.HINT:
+                hint_action = attrs.get("hint_action", {})
+                target_player_name = hint_action.get("target_player", {}).get(
+                    "name"
+                )
+
+                if (
+                    not self.context["game"]
+                    .players.exclude(pk=self._player.pk)
+                    .filter(lobby_member__name=target_player_name)
+                    .exists()
+                ):
+                    raise serializers.ValidationError(
+                        gettext("Invalid target player.")
+                    )
+
+            elif action_type == models.Action.PLAY:
                 play_action = attrs.get("play_action", {})
                 card = play_action.get("card_id")
 
