@@ -1,7 +1,9 @@
+import pytest
 import requests
 from rest_framework import status
 
 
+@pytest.mark.integration
 def test_create_play_action(live_server, two_card_game):
     game, shawn, gus = two_card_game
 
@@ -26,6 +28,7 @@ def test_create_play_action(live_server, two_card_game):
     assert play_action["was_successful"]
 
 
+@pytest.mark.integration
 def test_create_play_action_wrong_turn(live_server, two_card_game):
     game, shawn, gus = two_card_game
 
@@ -41,6 +44,7 @@ def test_create_play_action_wrong_turn(live_server, two_card_game):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.integration
 def test_create_play_action_invalid_card(live_server, two_card_game):
     game, shawn, gus = two_card_game
 

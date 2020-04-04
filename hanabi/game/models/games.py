@@ -18,6 +18,7 @@ class Game(models.Model):
         5: 1,
     }
     INITIAL_BOMB_COUNT = 3
+    INITIAL_HINT_COUNT = 8
 
     HAND_SIZE = 4
 
@@ -115,7 +116,7 @@ class Game(models.Model):
             order__gt=last_play.player.order
         )
         if not next_players_query.exists():
-            return ordered_players_query.first
+            return ordered_players_query.first()
 
         # If we are somewhere in the middle of the player order, return
         # the player with next-highest order.
@@ -169,6 +170,26 @@ class Game(models.Model):
         drawn_cards = self.actions.filter(draw_action__isnull=False).count()
 
         return deck_size - drawn_cards
+
+    @property
+    def remaining_hints(self):
+        """
+        Returns:
+            The number of hints available for use.
+        """
+        hints_used = self.actions.filter(hint_action__isnull=False).count()
+        hints_gained = self.cards.filter(
+            Q(discard_action__isnull=False)
+            | Q(play_action__card__number=5, play_action__was_successful=True)
+        ).count()
+
+        return max(
+            0,
+            min(
+                self.INITIAL_HINT_COUNT,
+                self.INITIAL_HINT_COUNT - hints_used + hints_gained,
+            ),
+        )
 
     def deal(self):
         hand_size = 5 if self.players.count() < 4 else 4

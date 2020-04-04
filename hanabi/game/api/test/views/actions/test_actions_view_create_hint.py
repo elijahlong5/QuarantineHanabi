@@ -129,3 +129,45 @@ def test_create_hint_for_self(live_server, two_card_game):
     response = requests.post(url, json=data)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.integration
+def test_create_hint_with_none_remaining(live_server, two_card_game):
+    game, shawn, gus = two_card_game
+    actions_url = f"{live_server}/api/games/{game.id}/actions/"
+
+    action_infos = (
+        (shawn.name, gus.cards[0].color, gus.name),
+        (gus.name, shawn.cards[0].color, shawn.name),
+    )
+
+    # Give out all 8 hints, alternating between players
+    for i in range(8):
+        player_name, color, target_player_name = action_infos[
+            i % len(action_infos)
+        ]
+
+        data = {
+            "action_type": "HINT",
+            "player_name": player_name,
+            "hint_action": {
+                "color": color,
+                "target_player_name": target_player_name,
+            },
+        }
+        response = requests.post(actions_url, json=data)
+        assert response.status_code == status.HTTP_201_CREATED, response.json()
+
+    # After using all the hints, the next hint should fail
+    data = {
+        "action_type": "HINT",
+        "player_name": shawn.name,
+        "hint_action": {
+            "color": gus.cards[0].color,
+            "target_player_name": gus.name,
+        },
+    }
+    url = f"{live_server}/api/games/{game.id}/actions/"
+    response = requests.post(url, json=data)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

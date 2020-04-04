@@ -87,6 +87,7 @@ class GameStateSerializer(serializers.ModelSerializer):
             "players",
             "remaining_bombs",
             "remaining_cards",
+            "remaining_hints",
         )
         model = models.Game
         read_only_fields = fields
@@ -248,6 +249,11 @@ class ActionSerializer(serializers.ModelSerializer):
                 )
 
             if action_type == models.Action.HINT:
+                if self.context["game"].remaining_hints <= 0:
+                    raise serializers.ValidationError(
+                        gettext("No hints remaining.")
+                    )
+
                 hint_action = attrs.get("hint_action", {})
                 target_player_name = hint_action.get("target_player", {}).get(
                     "name"
