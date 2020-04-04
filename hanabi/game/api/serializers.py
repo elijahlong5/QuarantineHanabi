@@ -111,9 +111,32 @@ class HintActionSerializer(serializers.ModelSerializer):
     target_player_name = serializers.CharField(source="target_player.name")
 
     class Meta:
-        extra_kwargs = {"color": {"required": False}}
         fields = ("color", "number", "target_player_name")
         model = models.HintAction
+
+    def validate(self, attrs):
+        """
+        Ensure that either a color or number has been provided, but not
+        both.
+
+        Args:
+            attrs:
+                The serializer data to validate.
+
+        Returns:
+            The validated data.
+        """
+        if "color" in attrs and "number" in attrs:
+            raise serializers.ValidationError(
+                gettext("A hint may not specify both a color and number.")
+            )
+
+        if "color" not in attrs and "number" not in attrs:
+            raise serializers.ValidationError(
+                gettext("A hint must specify a color or a number.")
+            )
+
+        return attrs
 
 
 class PlayActionSerializer(serializers.ModelSerializer):

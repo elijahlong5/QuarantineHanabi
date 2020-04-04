@@ -54,3 +54,21 @@ def test_create_hint_for_number(live_server, two_card_game):
 
     assert hint_action["number"] == gus.cards[0].number
     assert hint_action["target_player_name"] == gus.name
+
+
+def test_create_hint_with_both_color_and_number(live_server, two_card_game):
+    game, shawn, gus = two_card_game
+
+    data = {
+        "action_type": "HINT",
+        "player_name": shawn.name,
+        "hint_action": {
+            "color": gus.cards[0].color,
+            "number": gus.cards[0].number,
+            "target_player_name": gus.name,
+        },
+    }
+    url = f"{live_server}/api/games/{game.id}/actions/"
+    response = requests.post(url, json=data)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
