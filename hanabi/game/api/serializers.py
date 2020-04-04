@@ -107,6 +107,15 @@ class GameStateSerializer(serializers.ModelSerializer):
         return player_reps
 
 
+class HintActionSerializer(serializers.ModelSerializer):
+    target_player_name = serializers.CharField(source="target_player.name")
+
+    class Meta:
+        extra_kwargs = {"color": {"required": False}}
+        fields = ("color", "number", "target_player_name")
+        model = models.HintAction
+
+
 class PlayActionSerializer(serializers.ModelSerializer):
     card = GameStateCardSerializer(read_only=True)
     card_id = serializers.PrimaryKeyRelatedField(
@@ -143,13 +152,15 @@ class ActionSerializer(serializers.ModelSerializer):
     )
 
     action_type = serializers.ChoiceField(choices=type_choices)
-    play_action = PlayActionSerializer()
+    hint_action = HintActionSerializer(required=False)
+    play_action = PlayActionSerializer(required=False)
     player_name = serializers.CharField(source="player.name")
 
     class Meta:
         fields = (
             "action_type",
             "created_at",
+            "hint_action",
             "id",
             "play_action",
             "player_name",
@@ -172,7 +183,24 @@ class ActionSerializer(serializers.ModelSerializer):
             player=self._player,
         )
 
-        if action_type == models.Action.PLAY:
+        if action_type == models.Action.HINT:
+            hint_action = validated_data.pop("hint_action", {})
+
+            target_player = self.context["game"].players.get(
+                lobby_member__name=hint_action["target_player"]["name"]
+            )
+
+            hint_info = {}
+            if "color" in hint_action:
+                hint_info["color"] = hint_action["color"]
+            else:
+                hint_info["number"] = hint_action["number"]
+
+            models.HintAction.objects.create(
+                action=action, target_player=target_player, **hint_info
+            )
+
+        elif action_type == models.Action.PLAY:
             play_action = validated_data.pop("play_action", {})
             # card_id exposes itself as an ID but is represented in
             # Python as a full card object.

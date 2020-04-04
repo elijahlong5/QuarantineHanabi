@@ -125,7 +125,10 @@ class HintAction(models.Model):
         verbose_name=_("action"),
     )
     color = models.CharField(
-        choices=COLOR_CHOICES, max_length=7, verbose_name=_("color"),
+        choices=COLOR_CHOICES,
+        max_length=7,
+        null=True,
+        verbose_name=_("color"),
     )
     id = models.UUIDField(
         default=uuid.uuid4, primary_key=True, verbose_name=_("ID")
@@ -133,13 +136,20 @@ class HintAction(models.Model):
     number = models.PositiveSmallIntegerField(
         null=True, verbose_name=_("number")
     )
+    target_player = models.ForeignKey(
+        "Player",
+        on_delete=models.CASCADE,
+        related_name="hints",
+        related_query_name="hint",
+        verbose_name=_("target player"),
+    )
 
     class Meta:
         constraints = (
             models.CheckConstraint(
                 check=Q(
-                    (Q(color__isnull=False) & Q(number__isnull=True))
-                    | (Q(color__isnull=True) & Q(number__isnull=False))
+                    (Q(color__isnull=False, number__isnull=True))
+                    | (Q(color__isnull=True, number__isnull=False))
                 ),
                 name="cix_color_xor_number",
             ),
