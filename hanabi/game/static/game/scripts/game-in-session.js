@@ -9,17 +9,32 @@ const LINK_CARD_BACK = LINK_BASE_CARD + "card_back.png";
 
 let prevGameState = {};
 
-async function fetchGameState(gameCode, playerName) {
-    return fetch("/api/games/" + gameCode + "/?as_player=" + playerName)
+const GAME_CODE = window.gameCode;
+const PLAYER_NAME = window.playerName;
+
+async function fetchGameState() {
+    return fetch("/api/games/" + GAME_CODE + "/?as_player=" + PLAYER_NAME)
         .then(function(response) {
             return response.json();
         });
 }
 
+function handlePlayerMove( cardId ){
+    fetchPostPlayerMove(cardId)
+        .then( r => {
+            console.log(r);
+        })
+}
 
-async function fetchPostPlayerMove(playCardDict, accessToken, playerId) {
-    let data = playCardDict;
-    url = "/api/player-response/" + accessToken + "/" + playerId + "/";
+async function fetchPostPlayerMove( cardId ) {
+    let data = {
+        "action_type": "PLAY",
+        "player_name": PLAYER_NAME,
+        "play_action": {
+            "card_id": cardId,
+        },
+    };
+    url = "/api/games/" + GAME_CODE + "/actions/";
     const response = await fetch(url, {
         method: 'POST',
         mode: 'cors',
@@ -30,30 +45,28 @@ async function fetchPostPlayerMove(playCardDict, accessToken, playerId) {
         },
         redirect: 'follow',
         referrer: 'no-referrer',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     });
 
     return await response.json();
 }
 
-
-function initiateDisplay(gameCode, playerName) {
-    fetchGameState(gameCode, playerName)
+function initiateDisplay() {
+    fetchGameState()
         .then(populateDisplay.bind(this))
-        .then(pollGameState.bind(this, gameCode, playerName));
+        .then(pollGameState.bind(this));
 }
 
-function pollGameState(gameCode, playerName) {
-    fetchGameState(gameCode, playerName)
+function pollGameState() {
+    fetchGameState()
         .then(updateDisplay.bind(this))
         .then( function() {
            setTimeout(
-             pollGameState.bind(this, gameCode, playerName),
+             pollGameState.bind(this),
                GAME_UPDATE_INTERVAL_MILLIS
            );
         });
 }
-
 
 function populateDisplay( gameState ) {
     // game state elements
@@ -128,14 +141,13 @@ function manageHandDisplay(cardsDiv, playerCards) {
         activeIdList.push(cardId);
 
         if (!(childCardIds.indexOf(cardId) >= 0) && cardId !== undefined) {
-            console.log('showing new card: '+ cardId);
             let curImg = document.createElement("img");
             curImg.id = cardId;
             curImg.src = genCardLink(playerCards[card]);
             cardsDiv.appendChild(curImg);
             curImg.addEventListener("click", function () {
                 event.preventDefault();
-                console.log("Card " + cardOrder + " was clicked!");
+                handlePlayerMove(cardId);
             });
         }
     }

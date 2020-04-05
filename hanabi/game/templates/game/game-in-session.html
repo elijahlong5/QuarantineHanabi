@@ -14,11 +14,16 @@
     </div>
 {% endblock content %}
 {% block scripts %}
+    <script>
+        window.playerName = "{{player_name}}";
+        window.gameCode = "{{ game_code}}";
+    </script>
     <script src="{% static 'game/scripts/game-in-session.js' %}"></script>
     <script>
         $(document).ready(function() {
             let playerName = "{{ player_name }}";
             let gameCode = "{{ game_code }}";
+
             fetchGameState(gameCode, playerName);
             initiateDisplay(gameCode, playerName);
         });
