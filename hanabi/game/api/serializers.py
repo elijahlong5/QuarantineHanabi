@@ -236,6 +236,9 @@ class ActionSerializer(serializers.ModelSerializer):
                 was_successful=self.context["game"].is_playable(card),
             )
             action.player.remove_card(card, action)
+            self._player.give_card(
+                self.context["game"].draw_card(self._player)
+            )
 
         return action
 
