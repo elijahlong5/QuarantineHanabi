@@ -26,6 +26,7 @@ const ID_BUTTON_COLOR_HINT = "hint-color-button-id";
 const ATTR_NAME = "data-player-name";
 const ATTR_COLOR = "data-card-color";
 const ATTR_NUMBER = "data-card-number";
+const ATTR_PILE_NUM = "data-pile-for-"; // attr + color for the pile attribute
 
 async function fetchGameState() {
     return fetch("/api/games/" + GAME_CODE + "/?as_player=" + PLAYER_NAME)
@@ -84,7 +85,7 @@ function pollGameState() {
 }
 
 function populateDisplay( gameState ) {
-    // Function when page is loaded.  Displays bombs, hands, deck etc.
+    // Function when page is loaded.  Displays bombs, hands, piles, deck etc.
 
     // game state elements
     let remainingBombs = gameState["remaining_bombs"];
@@ -136,6 +137,8 @@ function populateDisplay( gameState ) {
     bombCountTitle.innerText = "Bombs remaining: " + remainingBombs;
     $("#bombs").append(bombCountTitle);
 
+    initiatePiles(gameState);
+
     prevGameState = gameState;
 }
 
@@ -157,7 +160,7 @@ function manageHandDisplay(cardsDiv, currentPlayerDict) {
 
     for (let card in playerCards) {
         let cardOrder = card;
-        let cardId = playerCards[card]["id"]
+        let cardId = playerCards[card]["id"];
         activeIdList.push(cardId);
 
         if (!(childCardIds.indexOf(cardId) >= 0) && cardId !== undefined) {
@@ -185,7 +188,7 @@ function manageHandDisplay(cardsDiv, currentPlayerDict) {
         }
     }
 
-    for( let i of activeIdList){
+    for(let i of activeIdList){
         if (childCardIds.indexOf(i) !== -1) {
             childCardIds.splice(childCardIds.indexOf(i), 1);
         }
@@ -310,6 +313,8 @@ function updateDisplay(gameState) {
     bombCount.innerText = "Bombs remaining: " + remainingBombs;
     deckCount.innerHTML = "Remaining:</br>" + remainingCards;
 
+    updatePiles(gameState);
+
     for (let p in players) {
         let curP = players[p];
         let curPlayerName = players[p]["name"];
@@ -329,10 +334,43 @@ function clearHintOptions() {
         c.classList.remove(SELECTED_CARD_CLASS);
         c.classList.add(UNSELECTED_CARD_CLASS);
     }
-
     let bColor = document.getElementById(ID_BUTTON_COLOR_HINT);
     let bNumber = document.getElementById(ID_BUTTON_NUMBER_HINT);
     console.log('here');
     bColor.parentNode.removeChild(bColor);
     bNumber.parentNode.removeChild(bNumber);
+}
+
+function initiatePiles(gameState) {
+    // Displays 1 pile for each color being used of blank cards
+
+    let piles = gameState['piles'];
+    const colorsUsed = Object.keys(piles);
+    let pilesDiv = document.getElementById('piles');
+
+    for (let c of colorsUsed) {
+        // Create the image with attribute and id
+        let pileImg = document.createElement("img");
+        pileImg.setAttribute(ATTR_PILE_NUM+c, 0);
+        pileImg.id = ATTR_PILE_NUM+c;
+        pileImg.src = LINK_CARD_BACK;
+        console.log(c);
+
+        pilesDiv.appendChild(pileImg);
+    }
+}
+
+function updatePiles(gameState) {
+    // Update the image and image attribute for the top card in the piles
+
+    let piles = gameState['piles'];
+    for (let c in piles) {
+        let pileAttr = ATTR_PILE_NUM+c;
+        let curPile = document.getElementById(pileAttr);
+        let attr = curPile.getAttribute(pileAttr);
+        if (parseInt(attr) !== piles[c]) {
+            curPile.setAttribute(pileAttr, piles[c]);
+            curPile.src = LINK_BASE_CARD + c + "_" + piles[c] + ".png";
+        }
+    }
 }
