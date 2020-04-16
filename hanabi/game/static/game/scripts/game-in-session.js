@@ -14,7 +14,7 @@ const SELECTED_CARD_CLASS = "selected-card";
 const ACTIVE_PLAYER_CLASS = "active-player";
 
 let prevGameState = {};
-let renderedGameLogElements = {};
+let renderedGameLogElements = [];
 
 // Variables set from the template
 const GAME_CODE = window.gameCode;
@@ -274,21 +274,6 @@ function initiatePiles(gameState) {
     }
 }
 
-function updateGameLog(logElements) {
-    logElements.splice(0, renderedGameLogElements.length);
-
-    let log = document.getElementById('game-log');
-    for (let e of logElements) {
-        let actionText = genStrFromAction(e);
-        if (actionText) {
-            let p = document.createElement("p");
-            p.innerText = actionText;
-            log.appendChild(p);
-        }
-    }
-    renderedGameLogElements = logElements;
-}
-
 // Updating portions of the page
 function updateDisplay(gameState) {
     fetchEventLog().then(r => {
@@ -347,6 +332,20 @@ function updatePiles(gameState) {
             curPile.setAttribute(pileAttr, piles[c]);
             curPile.src = LINK_BASE_CARD + c + "_" + piles[c] + ".png";
         }
+    }
+}
+
+function updateGameLog(logElements) {
+    logElements.splice(0, renderedGameLogElements.length);
+    let log = document.getElementById('game-log');
+    for (let e of logElements) {
+        let actionText = genStrFromAction(e);
+        if (actionText) {
+            let p = document.createElement("p");
+            p.innerText = actionText;
+            log.appendChild(p);
+        }
+        renderedGameLogElements.push(e)
     }
 }
 
