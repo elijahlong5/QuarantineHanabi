@@ -29,6 +29,45 @@ const ATTR_COLOR = "data-card-color";
 const ATTR_NUMBER = "data-card-number";
 const ATTR_PILE_NUM = "data-pile-for-"; // attr + color for the pile attribute
 
+// Helper methods
+function genCardLink(card) {
+    // Creates the image source link for the card.
+    let link = LINK_CARD_BACK;
+    if ("color" in card) {
+        let color = card["color"];
+        let rank = card["number"];
+        link = LINK_BASE_CARD + color + "_" + rank + ".png";
+    }
+    return link;
+}
+
+function clearHintOptions() {
+    // Removes number and color buttons.  Resets all cards to 'unselected'
+    // Removes play and discard buttons.
+    // Happens when any card is clicked and when a move is made.
+    addAndRemoveClasses( SELECTED_CARD_CLASS, UNSELECTED_CARD_CLASS );
+
+    let bColor = document.getElementById(ID_BUTTON_COLOR_HINT);
+    if (bColor !== null) {
+        let bNumber = document.getElementById(ID_BUTTON_NUMBER_HINT);
+        bColor.parentNode.removeChild(bColor);
+        bNumber.parentNode.removeChild(bNumber);
+    }
+    let bPlay =  document.getElementById("dne");
+}
+
+function addAndRemoveClasses( removeIt, addIt=null ) {
+    // Funciton will remove the removeIt class from every element with this class.
+    // If the addIt is not null then it will add this class those elements
+    for (let c of document.getElementsByClassName(removeIt)){
+        c.classList.remove(removeIt);
+        if (addIt !== null) {
+            c.classList.add(UNSELECTED_CARD_CLASS);
+        }
+    }
+
+}
+
 // Fetch requests
 async function fetchPostPlayerHint( cardId, hintType, targetPlayerName ) {
     let cardElem = document.getElementById(cardId);
@@ -74,9 +113,9 @@ async function fetchGameState() {
         });
 }
 
-async function fetchPostPlayerMove( cardId ) {
+async function fetchPostPlayerMove( cardId, actionType ) {
     let data = {
-        "action_type": "PLAY",
+        "action_type": actionType,
         "player_name": PLAYER_NAME,
         "play_action": {
             "card_id": cardId,
@@ -275,15 +314,16 @@ function manageHandDisplay(cardsDiv, currentPlayerDict) {
                 curImg.setAttribute(ATTR_NUMBER, playerCards[card]["number"]);
             }
 
-            cardsDiv.appendChild(curImg);
             curImg.addEventListener("click", function () {
-                event.preventDefault();
                 if (genCardLink(playerCards[card]) === LINK_CARD_BACK) {
-                    handlePlayerMove(cardId);
+                    handleOnClickCreatePlayOptions(cardId);
                 } else {
                     handleOnClickCreateHintOptions(cardId);
                 }
             });
+
+            cardsDiv.appendChild(curImg);
+
         }
     }
 
@@ -297,32 +337,9 @@ function manageHandDisplay(cardsDiv, currentPlayerDict) {
     });
 }
 
-// Helper methods
-function genCardLink(card) {
-    // Creates the image source link for the card.
-    let link = LINK_CARD_BACK;
-    if ("color" in card) {
-        let color = card["color"];
-        let rank = card["number"];
-        link = LINK_BASE_CARD + color + "_" + rank + ".png";
-    }
-    return link;
-}
-
-function clearHintOptions() {
-    // Removes number and color buttons.  Resets all cards to 'unselected'
-    for (let c of document.getElementsByClassName(SELECTED_CARD_CLASS)){
-        c.classList.remove(SELECTED_CARD_CLASS);
-        c.classList.add(UNSELECTED_CARD_CLASS);
-    }
-    let bColor = document.getElementById(ID_BUTTON_COLOR_HINT);
-    let bNumber = document.getElementById(ID_BUTTON_NUMBER_HINT);
-    bColor.parentNode.removeChild(bColor);
-    bNumber.parentNode.removeChild(bNumber);
-}
-
 // Handling button clicks
 function handleOnClickCreateHintOptions(cardId) {
+    // Creates the hint number and color buttons.
     let choiceDiv = document.createElement("div");
     const HINT_CHOICES_ID = "hint-choices";
     choiceDiv.id = HINT_CHOICES_ID;
@@ -330,10 +347,7 @@ function handleOnClickCreateHintOptions(cardId) {
     let bodyElem = document.getElementsByTagName("body")[0];
     let cardImgElem = document.getElementById(cardId);
 
-    for (let c of document.getElementsByClassName(SELECTED_CARD_CLASS)){
-        c.classList.remove(SELECTED_CARD_CLASS);
-        c.classList.add(UNSELECTED_CARD_CLASS);
-    }
+    addAndRemoveClasses( SELECTED_CARD_CLASS, UNSELECTED_CARD_CLASS );
     // Manage the element classes
     cardImgElem.classList.remove(UNSELECTED_CARD_CLASS);
     cardImgElem.classList.add(SELECTED_CARD_CLASS);
@@ -352,19 +366,11 @@ function handleOnClickCreateHintOptions(cardId) {
 
     buttonHintNumber.addEventListener("click", function() {
         event.preventDefault();
-        fetchPostPlayerHint(cardId, "number", cardHandDiv.id)
-            .then(r => {
-                console.log(r);
-                clearHintOptions();
-            })
+        handlePlayerGiveHint(cardId, "number", cardHandDiv.id);
     });
     buttonHintColor.addEventListener("click", function() {
         event.preventDefault();
-        fetchPostPlayerHint(cardId, "color", cardHandDiv.id)
-            .then(r => {
-                console.log(r);
-                clearHintOptions();
-            })
+        handlePlayerGiveHint(cardId, "color", cardHandDiv.id)
     });
 
     // Append the elements and position the button div
@@ -382,10 +388,66 @@ function handleOnClickCreateHintOptions(cardId) {
     });
 }
 
-function handlePlayerMove( cardId ){
-    fetchPostPlayerMove(cardId)
+function handleOnClickCreatePlayOptions(cardId) {
+    // Creates the play and discard buttons.
+    let choiceDiv = document.createElement("div");
+    const CHOICES_ID = "play-choices";
+    choiceDiv.id = CHOICES_ID;
+
+    let bodyElem = document.getElementsByTagName("body")[0];
+    let cardImgElem = document.getElementById(cardId);
+    addAndRemoveClasses( SELECTED_CARD_CLASS, UNSELECTED_CARD_CLASS);
+    // Manage the element classes
+    cardImgElem.classList.remove(UNSELECTED_CARD_CLASS);
+    cardImgElem.classList.add(SELECTED_CARD_CLASS);
+
+    let cardHandDiv = cardImgElem.parentElement.parentElement;
+
+    let cardPosition = $("#"+cardHandDiv.id).position();
+
+    // Create the two buttons
+    let buttonPlay = document.createElement('button');
+    buttonPlay.innerText = "Play";
+    buttonPlay.id = ID_BUTTON_NUMBER_HINT;
+    let buttonDiscard = document.createElement('button');
+    buttonDiscard.innerText = "Discard";
+    buttonDiscard.id = ID_BUTTON_COLOR_HINT;
+
+    buttonPlay.addEventListener("click", function() {
+        handlePlayerMove( cardId, "PLAY" );
+    });
+    buttonDiscard.addEventListener("click", function() {
+        handlePlayerMove( cardId, "DISCARD" );
+    });
+
+    // Append the elements and position the button div
+    choiceDiv.appendChild(buttonPlay);
+    choiceDiv.appendChild(buttonDiscard);
+
+    $("#"+CHOICES_ID).remove();
+    bodyElem.appendChild(choiceDiv);
+
+    $("#"+CHOICES_ID).css({
+        position: "absolute",
+        top: cardPosition.bottom + "px",
+        left: (cardPosition.left) + "px",
+        width: "150%",
+    });
+}
+
+function handlePlayerMove( cardId, actionType ) {
+    fetchPostPlayerMove(cardId, actionType)
         .then( r => {
             console.log(r);
+        })
+}
+
+function handlePlayerGiveHint(cardId, hintType, cardHandId) {
+    clearHintOptions();
+    fetchPostPlayerHint(cardId, hintType, cardHandId)
+        .then(r => {
+            console.log(r);
+            clearHintOptions();
         })
 }
 
