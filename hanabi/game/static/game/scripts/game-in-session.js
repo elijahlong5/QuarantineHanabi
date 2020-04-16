@@ -11,6 +11,7 @@ const LINK_CARD_BACK = LINK_BASE_CARD + "card_back.png";
 // css classes
 const UNSELECTED_CARD_CLASS = "unselected-card";
 const SELECTED_CARD_CLASS = "selected-card";
+const ACTIVE_PLAYER_CLASS = "active-player";
 
 let prevGameState = {};
 
@@ -28,18 +29,49 @@ const ATTR_COLOR = "data-card-color";
 const ATTR_NUMBER = "data-card-number";
 const ATTR_PILE_NUM = "data-pile-for-"; // attr + color for the pile attribute
 
+// Fetch requests
+async function fetchPostPlayerHint( cardId, hintType, targetPlayerName ) {
+    let cardElem = document.getElementById(cardId);
+    let cardColor = cardElem.getAttribute(ATTR_COLOR);
+    let cardNumber = cardElem.getAttribute(ATTR_NUMBER);
+    let cardAttr = cardNumber;
+    if (hintType === "number"){
+        cardAttr = cardNumber;
+    } else {
+        cardAttr = cardColor;
+    }
+
+    let data = {
+        "action_type": "HINT",
+        "player_name": PLAYER_NAME,
+        'hint_action': {
+            [hintType]: cardAttr,
+            "target_player_name": targetPlayerName,
+        }
+    };
+
+    url = "/api/games/" + GAME_CODE + "/actions/";
+    const response = await fetch(url, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        redirect: 'follow',
+        referrer: 'no-referrer',
+        body: JSON.stringify(data),
+    });
+
+    return await response.json();
+}
+
 async function fetchGameState() {
     return fetch("/api/games/" + GAME_CODE + "/?as_player=" + PLAYER_NAME)
         .then(function(response) {
             return response.json();
         });
-}
-
-function handlePlayerMove( cardId ){
-    fetchPostPlayerMove(cardId)
-        .then( r => {
-            console.log(r);
-        })
 }
 
 async function fetchPostPlayerMove( cardId ) {
@@ -67,20 +99,72 @@ async function fetchPostPlayerMove( cardId ) {
     return await response.json();
 }
 
+// Initiating the display
 function initiateDisplay() {
     fetchGameState()
         .then(populateDisplay.bind(this))
         .then(pollGameState.bind(this));
 }
 
+function initiatePiles(gameState) {
+    // Displays 1 pile for each color being used of blank cards
+
+    let piles = gameState['piles'];
+    const colorsUsed = Object.keys(piles);
+    let pilesDiv = document.getElementById('piles');
+
+    for (let c of colorsUsed) {
+        // Create the image with attribute and id
+        let pileImg = document.createElement("img");
+        pileImg.setAttribute(ATTR_PILE_NUM+c, 0);
+        pileImg.id = ATTR_PILE_NUM+c;
+        pileImg.src = LINK_CARD_BACK;
+        console.log(c);
+
+        pilesDiv.appendChild(pileImg);
+    }
+}
+
+// Updating portions of the page
+function updateDisplay(gameState) {
+    console.log(gameState);
+    let remainingBombs = gameState["remaining_bombs"];
+    let remainingCards = gameState["remaining_cards"];
+    let players = gameState["players"];
+    let bombCount = document.getElementById(ID_BOMBS);
+    let deckCount = document.getElementById(ID_CARDS_REMAINING);
+
+    bombCount.innerText = "Bombs remaining: " + remainingBombs;
+    deckCount.innerHTML = "Remaining:</br>" + remainingCards;
+
+    // Update showing the active player
+    for (let c of document.getElementsByClassName(ACTIVE_PLAYER_CLASS)){
+        if (c.id !== gameState['active_player']) {c.classList.remove(ACTIVE_PLAYER_CLASS);}
+    }
+    document.getElementById(gameState['active_player']).classList.add(ACTIVE_PLAYER_CLASS);
+
+    updatePiles(gameState);
+
+    for (let p in players) {
+        let curP = players[p];
+        let curPlayerName = players[p]["name"];
+        let playerCards = players[p]["cards"];
+        let playerOrder = players[p]["order"];
+
+        let cardsDivId = curPlayerName + CARD_ID_SUFFIX;
+        let cardsDiv = document.getElementById(cardsDivId);
+        manageHandDisplay(cardsDiv, curP);
+    }
+}
+
 function pollGameState() {
     fetchGameState()
         .then(updateDisplay.bind(this))
         .then( function() {
-           setTimeout(
-             pollGameState.bind(this),
-               GAME_UPDATE_INTERVAL_MILLIS
-           );
+            setTimeout(
+                pollGameState.bind(this),
+                GAME_UPDATE_INTERVAL_MILLIS
+            );
         });
 }
 
@@ -142,6 +226,21 @@ function populateDisplay( gameState ) {
     prevGameState = gameState;
 }
 
+function updatePiles(gameState) {
+    // Update the image and image attribute for the top card in the piles
+
+    let piles = gameState['piles'];
+    for (let c in piles) {
+        let pileAttr = ATTR_PILE_NUM+c;
+        let curPile = document.getElementById(pileAttr);
+        let attr = curPile.getAttribute(pileAttr);
+        if (parseInt(attr) !== piles[c]) {
+            curPile.setAttribute(pileAttr, piles[c]);
+            curPile.src = LINK_BASE_CARD + c + "_" + piles[c] + ".png";
+        }
+    }
+}
+
 function manageHandDisplay(cardsDiv, currentPlayerDict) {
     // Displays images for the cards in  each players hand
     // Sets card attributes
@@ -194,10 +293,35 @@ function manageHandDisplay(cardsDiv, currentPlayerDict) {
         }
     }
     childCardIds.forEach(id => {
-       cardsDiv.removeChild(document.getElementById(id));
+        cardsDiv.removeChild(document.getElementById(id));
     });
 }
 
+// Helper methods
+function genCardLink(card) {
+    // Creates the image source link for the card.
+    let link = LINK_CARD_BACK;
+    if ("color" in card) {
+        let color = card["color"];
+        let rank = card["number"];
+        link = LINK_BASE_CARD + color + "_" + rank + ".png";
+    }
+    return link;
+}
+
+function clearHintOptions() {
+    // Removes number and color buttons.  Resets all cards to 'unselected'
+    for (let c of document.getElementsByClassName(SELECTED_CARD_CLASS)){
+        c.classList.remove(SELECTED_CARD_CLASS);
+        c.classList.add(UNSELECTED_CARD_CLASS);
+    }
+    let bColor = document.getElementById(ID_BUTTON_COLOR_HINT);
+    let bNumber = document.getElementById(ID_BUTTON_NUMBER_HINT);
+    bColor.parentNode.removeChild(bColor);
+    bNumber.parentNode.removeChild(bNumber);
+}
+
+// Handling button clicks
 function handleOnClickCreateHintOptions(cardId) {
     let choiceDiv = document.createElement("div");
     const HINT_CHOICES_ID = "hint-choices";
@@ -206,6 +330,10 @@ function handleOnClickCreateHintOptions(cardId) {
     let bodyElem = document.getElementsByTagName("body")[0];
     let cardImgElem = document.getElementById(cardId);
 
+    for (let c of document.getElementsByClassName(SELECTED_CARD_CLASS)){
+        c.classList.remove(SELECTED_CARD_CLASS);
+        c.classList.add(UNSELECTED_CARD_CLASS);
+    }
     // Manage the element classes
     cardImgElem.classList.remove(UNSELECTED_CARD_CLASS);
     cardImgElem.classList.add(SELECTED_CARD_CLASS);
@@ -254,123 +382,10 @@ function handleOnClickCreateHintOptions(cardId) {
     });
 }
 
-async function fetchPostPlayerHint( cardId, hintType, targetPlayerName ) {
-    let cardElem = document.getElementById(cardId);
-    let cardColor = cardElem.getAttribute(ATTR_COLOR);
-    let cardNumber = cardElem.getAttribute(ATTR_NUMBER);
-    let cardAttr = cardNumber;
-    if (hintType === "number"){
-        cardAttr = cardNumber;
-    } else {
-        cardAttr = cardColor;
-    }
-
-    let data = {
-        "action_type": "HINT",
-        "player_name": PLAYER_NAME,
-        'hint_action': {
-            [hintType]: cardAttr,
-            "target_player_name": targetPlayerName,
-        }
-    };
-
-    url = "/api/games/" + GAME_CODE + "/actions/";
-    const response = await fetch(url, {
-        method: 'POST',
-        mode: 'cors',
-        cache: 'no-cache',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        redirect: 'follow',
-        referrer: 'no-referrer',
-        body: JSON.stringify(data),
-    });
-
-    return await response.json();
+function handlePlayerMove( cardId ){
+    fetchPostPlayerMove(cardId)
+        .then( r => {
+            console.log(r);
+        })
 }
 
-function genCardLink(card) {
-    // Creates the image source link for the card.
-    let link = LINK_CARD_BACK;
-    if ("color" in card) {
-        let color = card["color"];
-        let rank = card["number"];
-        link = LINK_BASE_CARD + color + "_" + rank + ".png";
-    }
-    return link;
-}
-
-function updateDisplay(gameState) {
-    console.log(gameState);
-    let remainingBombs = gameState["remaining_bombs"];
-    let remainingCards = gameState["remaining_cards"];
-    let players = gameState["players"];
-    let bombCount = document.getElementById(ID_BOMBS);
-    let deckCount = document.getElementById(ID_CARDS_REMAINING);
-
-    bombCount.innerText = "Bombs remaining: " + remainingBombs;
-    deckCount.innerHTML = "Remaining:</br>" + remainingCards;
-
-    updatePiles(gameState);
-
-    for (let p in players) {
-        let curP = players[p];
-        let curPlayerName = players[p]["name"];
-        let playerCards = players[p]["cards"];
-        let playerOrder = players[p]["order"];
-
-        let cardsDivId = curPlayerName + CARD_ID_SUFFIX;
-        let cardsDiv = document.getElementById(cardsDivId);
-        manageHandDisplay(cardsDiv, curP);
-    }
-}
-
-function clearHintOptions() {
-    // Removes number and color buttons.  Resets all cards to 'unselected'
-
-    for (let c of document.getElementsByClassName(SELECTED_CARD_CLASS)){
-        c.classList.remove(SELECTED_CARD_CLASS);
-        c.classList.add(UNSELECTED_CARD_CLASS);
-    }
-    let bColor = document.getElementById(ID_BUTTON_COLOR_HINT);
-    let bNumber = document.getElementById(ID_BUTTON_NUMBER_HINT);
-    console.log('here');
-    bColor.parentNode.removeChild(bColor);
-    bNumber.parentNode.removeChild(bNumber);
-}
-
-function initiatePiles(gameState) {
-    // Displays 1 pile for each color being used of blank cards
-
-    let piles = gameState['piles'];
-    const colorsUsed = Object.keys(piles);
-    let pilesDiv = document.getElementById('piles');
-
-    for (let c of colorsUsed) {
-        // Create the image with attribute and id
-        let pileImg = document.createElement("img");
-        pileImg.setAttribute(ATTR_PILE_NUM+c, 0);
-        pileImg.id = ATTR_PILE_NUM+c;
-        pileImg.src = LINK_CARD_BACK;
-        console.log(c);
-
-        pilesDiv.appendChild(pileImg);
-    }
-}
-
-function updatePiles(gameState) {
-    // Update the image and image attribute for the top card in the piles
-
-    let piles = gameState['piles'];
-    for (let c in piles) {
-        let pileAttr = ATTR_PILE_NUM+c;
-        let curPile = document.getElementById(pileAttr);
-        let attr = curPile.getAttribute(pileAttr);
-        if (parseInt(attr) !== piles[c]) {
-            curPile.setAttribute(pileAttr, piles[c]);
-            curPile.src = LINK_BASE_CARD + c + "_" + piles[c] + ".png";
-        }
-    }
-}
