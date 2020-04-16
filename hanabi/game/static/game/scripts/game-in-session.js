@@ -14,12 +14,14 @@ const SELECTED_CARD_CLASS = "selected-card";
 const ACTIVE_PLAYER_CLASS = "active-player";
 
 let prevGameState = {};
+let renderedGameLogElements = {};
 
 // Variables set from the template
 const GAME_CODE = window.gameCode;
 const PLAYER_NAME = window.playerName;
 
-// Hint button ids
+// Button ids
+const CHOICES_ID = "button-choices";
 const ID_BUTTON_NUMBER_HINT = "hint-number-button-id";
 const ID_BUTTON_COLOR_HINT = "hint-color-button-id";
 
@@ -41,6 +43,38 @@ function genCardLink(card) {
     return link;
 }
 
+function genStrFromAction(action) {
+    // Returns string or null if shouldn't be displayed
+    let actionStr = "";
+
+    let actionType = action['action_type'];
+    if (actionType === 2 ||
+        actionType === 4) {
+        // Null for drawing and ordering hand
+        return null
+    } else if (actionType === 1) {
+        // Discard
+        actionStr = action['player_name'] + " discarded a card";
+    } else if (actionType === 3) {
+        // Hint
+        actionStr += action['player_name'] + " tells " + action['hint_action']['target_player_name']
+        actionStr += " which cards are ";
+        if (action['hint_action']['color']) {
+            actionStr += action['hint_action']['color'].toLowerCase() + ".";
+        } else {
+            actionStr += action['hint_action']['number'] + "'s."
+        }
+    }else if (actionType === 5) {
+        // Play
+        actionStr += action['player_name'] + " played the " + action['play_action']['card']['color'].toLowerCase()
+        actionStr += " " + action['play_action']['card']['number'];
+        if (!action['play_action']['was_successful']) {
+            actionStr += ", but it was unplayable."
+        }
+    }
+    return actionStr;
+}
+
 function clearHintOptions() {
     // Removes number and color buttons.  Resets all cards to 'unselected'
     // Removes play and discard buttons.
@@ -53,7 +87,10 @@ function clearHintOptions() {
         bColor.parentNode.removeChild(bColor);
         bNumber.parentNode.removeChild(bNumber);
     }
-    let bPlay =  document.getElementById("dne");
+    let bPlay =  document.getElementById("play-choices");
+    if (bPlay !== null) {
+        bPlay.parentNode.removeChild(bPlay);
+    }
 }
 
 function addAndRemoveClasses( removeIt, addIt=null ) {
@@ -66,6 +103,15 @@ function addAndRemoveClasses( removeIt, addIt=null ) {
         }
     }
 
+}
+
+function positionButtons(cardPosition) {
+    $("#"+CHOICES_ID).css({
+        position: "absolute",
+        top: (cardPosition.top + 200) + "px",
+        left: (cardPosition.left) + "px",
+        width: "150%",
+    });
 }
 
 // Fetch requests
@@ -106,13 +152,6 @@ async function fetchPostPlayerHint( cardId, hintType, targetPlayerName ) {
     return await response.json();
 }
 
-async function fetchGameState() {
-    return fetch("/api/games/" + GAME_CODE + "/?as_player=" + PLAYER_NAME)
-        .then(function(response) {
-            return response.json();
-        });
-}
-
 async function fetchPostPlayerMove( cardId, actionType ) {
     let data = {
         "action_type": actionType,
@@ -138,75 +177,21 @@ async function fetchPostPlayerMove( cardId, actionType ) {
     return await response.json();
 }
 
-// Initiating the display
-function initiateDisplay() {
-    fetchGameState()
-        .then(populateDisplay.bind(this))
-        .then(pollGameState.bind(this));
-}
-
-function initiatePiles(gameState) {
-    // Displays 1 pile for each color being used of blank cards
-
-    let piles = gameState['piles'];
-    const colorsUsed = Object.keys(piles);
-    let pilesDiv = document.getElementById('piles');
-
-    for (let c of colorsUsed) {
-        // Create the image with attribute and id
-        let pileImg = document.createElement("img");
-        pileImg.setAttribute(ATTR_PILE_NUM+c, 0);
-        pileImg.id = ATTR_PILE_NUM+c;
-        pileImg.src = LINK_CARD_BACK;
-        console.log(c);
-
-        pilesDiv.appendChild(pileImg);
-    }
-}
-
-// Updating portions of the page
-function updateDisplay(gameState) {
-    console.log(gameState);
-    let remainingBombs = gameState["remaining_bombs"];
-    let remainingCards = gameState["remaining_cards"];
-    let players = gameState["players"];
-    let bombCount = document.getElementById(ID_BOMBS);
-    let deckCount = document.getElementById(ID_CARDS_REMAINING);
-
-    bombCount.innerText = "Bombs remaining: " + remainingBombs;
-    deckCount.innerHTML = "Remaining:</br>" + remainingCards;
-
-    // Update showing the active player
-    for (let c of document.getElementsByClassName(ACTIVE_PLAYER_CLASS)){
-        if (c.id !== gameState['active_player']) {c.classList.remove(ACTIVE_PLAYER_CLASS);}
-    }
-    document.getElementById(gameState['active_player']).classList.add(ACTIVE_PLAYER_CLASS);
-
-    updatePiles(gameState);
-
-    for (let p in players) {
-        let curP = players[p];
-        let curPlayerName = players[p]["name"];
-        let playerCards = players[p]["cards"];
-        let playerOrder = players[p]["order"];
-
-        let cardsDivId = curPlayerName + CARD_ID_SUFFIX;
-        let cardsDiv = document.getElementById(cardsDivId);
-        manageHandDisplay(cardsDiv, curP);
-    }
-}
-
-function pollGameState() {
-    fetchGameState()
-        .then(updateDisplay.bind(this))
-        .then( function() {
-            setTimeout(
-                pollGameState.bind(this),
-                GAME_UPDATE_INTERVAL_MILLIS
-            );
+async function fetchEventLog() {
+    return fetch("/api/games/" + GAME_CODE + "/actions/")
+        .then(function (response) {
+            return response.json();
         });
 }
 
+async function fetchGameState() {
+    return fetch("/api/games/" + GAME_CODE + "/?as_player=" + PLAYER_NAME)
+        .then(function(response) {
+            return response.json();
+        });
+}
+
+// Initiating the display
 function populateDisplay( gameState ) {
     // Function when page is loaded.  Displays bombs, hands, piles, deck etc.
 
@@ -263,6 +248,91 @@ function populateDisplay( gameState ) {
     initiatePiles(gameState);
 
     prevGameState = gameState;
+}
+
+function initiateDisplay() {
+    fetchGameState()
+        .then(populateDisplay.bind(this))
+        .then(pollGameState.bind(this));
+}
+
+function initiatePiles(gameState) {
+    // Displays 1 pile for each color being used of blank cards
+
+    let piles = gameState['piles'];
+    const colorsUsed = Object.keys(piles);
+    let pilesDiv = document.getElementById('piles');
+
+    for (let c of colorsUsed) {
+        // Create the image with attribute and id
+        let pileImg = document.createElement("img");
+        pileImg.setAttribute(ATTR_PILE_NUM+c, 0);
+        pileImg.id = ATTR_PILE_NUM+c;
+        pileImg.src = LINK_CARD_BACK;
+
+        pilesDiv.appendChild(pileImg);
+    }
+}
+
+function updateGameLog(logElements) {
+    logElements.splice(0, renderedGameLogElements.length);
+
+    let log = document.getElementById('game-log');
+    for (let e of logElements) {
+        let actionText = genStrFromAction(e);
+        if (actionText) {
+            let p = document.createElement("p");
+            p.innerText = actionText;
+            log.appendChild(p);
+        }
+    }
+    renderedGameLogElements = logElements;
+}
+
+// Updating portions of the page
+function updateDisplay(gameState) {
+    fetchEventLog().then(r => {
+        updateGameLog(r);
+    });
+    console.log(gameState);
+    let remainingBombs = gameState["remaining_bombs"];
+    let remainingCards = gameState["remaining_cards"];
+    let players = gameState["players"];
+    let bombCount = document.getElementById(ID_BOMBS);
+    let deckCount = document.getElementById(ID_CARDS_REMAINING);
+
+    bombCount.innerText = "Bombs remaining: " + remainingBombs;
+    deckCount.innerHTML = "Remaining:</br>" + remainingCards;
+
+    // Update showing the active player
+    for (let c of document.getElementsByClassName(ACTIVE_PLAYER_CLASS)){
+        if (c.id !== gameState['active_player']) {c.classList.remove(ACTIVE_PLAYER_CLASS);}
+    }
+    document.getElementById(gameState['active_player']).classList.add(ACTIVE_PLAYER_CLASS);
+
+    updatePiles(gameState);
+
+    for (let p in players) {
+        let curP = players[p];
+        let curPlayerName = players[p]["name"];
+        let playerCards = players[p]["cards"];
+        let playerOrder = players[p]["order"];
+
+        let cardsDivId = curPlayerName + CARD_ID_SUFFIX;
+        let cardsDiv = document.getElementById(cardsDivId);
+        manageHandDisplay(cardsDiv, curP);
+    }
+}
+
+function pollGameState() {
+    fetchGameState()
+        .then(updateDisplay.bind(this))
+        .then( function() {
+            setTimeout(
+                pollGameState.bind(this),
+                GAME_UPDATE_INTERVAL_MILLIS
+            );
+        });
 }
 
 function updatePiles(gameState) {
@@ -341,13 +411,12 @@ function manageHandDisplay(cardsDiv, currentPlayerDict) {
 function handleOnClickCreateHintOptions(cardId) {
     // Creates the hint number and color buttons.
     let choiceDiv = document.createElement("div");
-    const HINT_CHOICES_ID = "hint-choices";
-    choiceDiv.id = HINT_CHOICES_ID;
+    choiceDiv.id = CHOICES_ID;
 
     let bodyElem = document.getElementsByTagName("body")[0];
     let cardImgElem = document.getElementById(cardId);
 
-    addAndRemoveClasses( SELECTED_CARD_CLASS, UNSELECTED_CARD_CLASS );
+    clearHintOptions();
     // Manage the element classes
     cardImgElem.classList.remove(UNSELECTED_CARD_CLASS);
     cardImgElem.classList.add(SELECTED_CARD_CLASS);
@@ -377,26 +446,20 @@ function handleOnClickCreateHintOptions(cardId) {
     choiceDiv.appendChild(buttonHintNumber);
     choiceDiv.appendChild(buttonHintColor);
 
-    $("#"+HINT_CHOICES_ID).remove();
+    $("#"+CHOICES_ID).remove();
     bodyElem.appendChild(choiceDiv);
 
-    $("#"+HINT_CHOICES_ID).css({
-        position: "absolute",
-        top: cardPosition.bottom + "px",
-        left: (cardPosition.left) + "px",
-        width: "150%",
-    });
+    positionButtons(cardPosition);
 }
 
 function handleOnClickCreatePlayOptions(cardId) {
     // Creates the play and discard buttons.
     let choiceDiv = document.createElement("div");
-    const CHOICES_ID = "play-choices";
     choiceDiv.id = CHOICES_ID;
 
     let bodyElem = document.getElementsByTagName("body")[0];
     let cardImgElem = document.getElementById(cardId);
-    addAndRemoveClasses( SELECTED_CARD_CLASS, UNSELECTED_CARD_CLASS);
+    clearHintOptions();
     // Manage the element classes
     cardImgElem.classList.remove(UNSELECTED_CARD_CLASS);
     cardImgElem.classList.add(SELECTED_CARD_CLASS);
@@ -427,15 +490,11 @@ function handleOnClickCreatePlayOptions(cardId) {
     $("#"+CHOICES_ID).remove();
     bodyElem.appendChild(choiceDiv);
 
-    $("#"+CHOICES_ID).css({
-        position: "absolute",
-        top: cardPosition.bottom + "px",
-        left: (cardPosition.left) + "px",
-        width: "150%",
-    });
+    positionButtons(cardPosition);
 }
 
 function handlePlayerMove( cardId, actionType ) {
+    clearHintOptions();
     fetchPostPlayerMove(cardId, actionType)
         .then( r => {
             console.log(r);
@@ -450,4 +509,3 @@ function handlePlayerGiveHint(cardId, hintType, cardHandId) {
             clearHintOptions();
         })
 }
-
