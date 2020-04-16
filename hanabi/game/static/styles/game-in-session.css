@@ -7,9 +7,19 @@
     flex-wrap: wrap;
 }
 
+#bombs {
+    text-wrap: normal;
+    max-width: 100px;
+    text-align: center;
+}
+
 #deck {
     position: relative;
     max-width: 150px;
+}
+
+#piles > img {
+    max-width: 80px;
 }
 
 .centered {
