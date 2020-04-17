@@ -1,8 +1,4 @@
 const GAME_UPDATE_INTERVAL_MILLIS = 5000;
-const ID_DECK_IMG = 'deck-image';
-const ID_BOMBS = 'bombs-remaining';
-const ID_CARDS_REMAINING = 'cards-remaining';
-const CARD_ID_SUFFIX = "s-cards"; // playerName + suffix
 
 // Card link strings
 const LINK_BASE_CARD = "/static/hanabi_deck/";
@@ -24,6 +20,11 @@ const PLAYER_NAME = window.playerName;
 const CHOICES_ID = "button-choices";
 const ID_BUTTON_NUMBER_HINT = "hint-number-button-id";
 const ID_BUTTON_COLOR_HINT = "hint-color-button-id";
+const ID_DECK_IMG = 'deck-image';
+const ID_BOMBS = 'bombs-remaining';
+const ID_HINTS = "hints";
+const ID_CARDS_REMAINING = 'cards-remaining';
+const CARD_ID_SUFFIX = "s-cards"; // playerName + suffix
 
 // Card image attributes
 const ATTR_NAME = "data-player-name";
@@ -198,12 +199,15 @@ function populateDisplay( gameState ) {
     // game state elements
     let remainingBombs = gameState["remaining_bombs"];
     let remainingCards = gameState["remaining_cards"];
+    let remainingHints = gameState["remaining_hints"];
     let players = gameState["players"];
 
     document.getElementById("hands").innerHTML = "";
     document.getElementById("deck").innerHTML = "";
     document.getElementById("bombs").innerHTML = "";
     document.getElementById("piles").innerHTML = "";
+    document.getElementById("discard-pile").innerHTML = "";
+    document.getElementById("hints").innerHTML = "";
     // Display players' hands
     for (let p in players) {
         let curPlayerName = players[p]["name"];
@@ -245,6 +249,12 @@ function populateDisplay( gameState ) {
     bombCountTitle.innerText = "Bombs remaining: " + remainingBombs;
     $("#bombs").append(bombCountTitle);
 
+    // Display remaining hints
+    let hintCountTitle = document.createElement("h3");
+    hintCountTitle.id = ID_HINTS;
+    hintCountTitle.innerText = "Hints left: " + remainingHints;
+    $("#hints").append(hintCountTitle);
+
     initiatePiles(gameState);
 
     prevGameState = gameState;
@@ -282,12 +292,16 @@ function updateDisplay(gameState) {
     console.log(gameState);
     let remainingBombs = gameState["remaining_bombs"];
     let remainingCards = gameState["remaining_cards"];
+    let remainingHints = gameState["remaining_hints"];
     let players = gameState["players"];
     let bombCount = document.getElementById(ID_BOMBS);
     let deckCount = document.getElementById(ID_CARDS_REMAINING);
+    let hintCount = document.getElementById(ID_HINTS);
 
     bombCount.innerText = "Bombs remaining: " + remainingBombs;
     deckCount.innerHTML = "Remaining:</br>" + remainingCards;
+    hintCount.innerText = "Hints left: " + remainingHints;
+
 
     // Update showing the active player
     for (let c of document.getElementsByClassName(ACTIVE_PLAYER_CLASS)){
